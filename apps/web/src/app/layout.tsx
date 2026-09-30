@@ -28,8 +28,10 @@ export const viewport: Viewport = {
 export default async function RootLayout({ children }: LayoutProps<"/">) {
   const user = await getSessionUser();
   return (
-    <html lang="en" className={`${barlow.variable} ${sinhala.variable} ${tamil.variable}`}>
-      <body className="flex min-h-dvh flex-col">
+    // Extensions (Grammarly, password managers) add attributes to <html>/<body> before React
+    // hydrates; this ignores those two elements only, not the app below them.
+    <html lang="en" className={`${barlow.variable} ${sinhala.variable} ${tamil.variable}`} suppressHydrationWarning>
+      <body className="flex min-h-dvh flex-col" suppressHydrationWarning>
         <a href="#main" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-full focus:bg-card focus:px-4 focus:py-2">
           Skip to content
         </a>
