@@ -67,7 +67,7 @@ export function IslandMap({ places, route, selectedId, onSelect, fadedRegions, r
   }
 
   return (
-    <div className={clsx("relative overflow-hidden bg-sea", className)}>
+    <div className={clsx(!/\babsolute\b/.test(className ?? "") && "relative", "overflow-hidden bg-sea", className)}>
       <svg
         ref={svgRef}
         viewBox={`${vx} ${vy} ${vw} ${vh}`}

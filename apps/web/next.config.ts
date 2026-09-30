@@ -8,6 +8,9 @@ const nextConfig: NextConfig = {
   async rewrites() {
     return [{ source: "/api/:path*", destination: `${API_URL}/api/:path*` }];
   },
+  // Dev only: lets http://127.0.0.1:3000 load dev assets (useful for testing
+  // how the site behaves when the Google key rejects an unlisted host).
+  allowedDevOrigins: ["127.0.0.1"],
   experimental: {
     // The repo currently lives on an NTFS volume, where the dev cache's
     // rapid atomic renames fail (EBADF). Re-enable on APFS/ext4 for faster restarts.

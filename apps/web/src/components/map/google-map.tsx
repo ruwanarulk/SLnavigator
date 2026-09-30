@@ -79,7 +79,7 @@ export function GoogleTripMap({
   const routeIds = new Set(route.map((r) => r.location.id));
   const container = useRef<HTMLDivElement>(null);
   return (
-    <div ref={container} className={clsx("relative overflow-hidden bg-sea", className)}>
+    <div ref={container} className={clsx(!/\babsolute\b/.test(className ?? "") && "relative", "overflow-hidden bg-sea", className)}>
       <APIProvider apiKey={apiKey} onError={markGoogleFailed}>
         <FailureWatch container={container} />
         <Map
