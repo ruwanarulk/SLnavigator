@@ -1,0 +1,21 @@
+{
+  "name": "sri-lanka-navigator",
+  "private": true,
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "dev": "npm run build -w @sln/core && npm-run-all --parallel dev:core dev:api dev:web",
+    "dev:api": "npm run dev -w api",
+    "dev:web": "npm run dev -w web",
+    "build": "npm run build -w @sln/core && npm run build -w api && npm run build -w web",
+    "db:migrate": "npm run db:migrate -w api",
+    "db:seed": "npm run db:seed -w api",
+    "test": "npm test -w @sln/core && npm test -w api",
+    "dev:core": "npm run dev -w @sln/core"
+  },
+  "devDependencies": {
+    "npm-run-all2": "^7.0.2"
+  }
+}

@@ -1,0 +1,143 @@
+@import "tailwindcss";
+
+/* Tokens lifted from UI/Sri Lanka Navigator — UI Web.html ("Brand & UI"). */
+:root {
+  --bg: #F2F2F7;
+  --card: #FFFFFF;
+  --fill: #E9E9EE;
+  --label: #1D1D1F;
+  --label2: #5E5E66;
+  --sep: #D8D8DE;
+  --accent: #006B6B;
+  --accent-d: #005454;
+  --accent-t: #E0F0EF;
+  --accent-ink: #005A5A;
+  --on-accent: #FFFFFF;
+  --signal: #F5C518;
+  --signal-t: #FFF4CC;
+  --signal-ink: #6B5200;
+  --ok: #1B6B36;
+  --ok-t: #E3F3E7;
+  --danger: #C4312A;
+  --danger-t: #FBE6E4;
+  --land: #E6E1D3;
+  --land-line: #C9C2AE;
+  --sea: #CFE4E2;
+  --glass: rgba(255, 255, 255, .74);
+  --glass-line: rgba(0, 0, 0, .07);
+  --shadow: 0 8px 28px rgba(0, 0, 0, .12);
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #000000;
+    --card: #1C1C1E;
+    --fill: #2C2C2E;
+    --label: #F5F5F7;
+    --label2: #A1A1A8;
+    --sep: #38383A;
+    --accent: #5ED3CB;
+    --accent-d: #8EE3DC;
+    --accent-t: #0E2E2C;
+    --accent-ink: #8EE3DC;
+    --on-accent: #00201F;
+    --signal: #F5C518;
+    --signal-t: #3A2F07;
+    --signal-ink: #F5D45E;
+    --ok: #6EDB8F;
+    --ok-t: #10301A;
+    --danger: #FF7B72;
+    --danger-t: #3A1614;
+    --land: #262826;
+    --land-line: #474A46;
+    --sea: #0E2120;
+    --glass: rgba(34, 34, 36, .72);
+    --glass-line: rgba(255, 255, 255, .10);
+    --shadow: 0 8px 28px rgba(0, 0, 0, .5);
+    color-scheme: dark;
+  }
+}
+
+@media (prefers-contrast: more) {
+  :root { --sep: #8E8E93; }
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-card: var(--card);
+  --color-fill: var(--fill);
+  --color-label: var(--label);
+  --color-label2: var(--label2);
+  --color-sep: var(--sep);
+  --color-accent: var(--accent);
+  --color-accent-d: var(--accent-d);
+  --color-accent-t: var(--accent-t);
+  --color-accent-ink: var(--accent-ink);
+  --color-on-accent: var(--on-accent);
+  --color-signal: var(--signal);
+  --color-signal-t: var(--signal-t);
+  --color-signal-ink: var(--signal-ink);
+  --color-ok: var(--ok);
+  --color-ok-t: var(--ok-t);
+  --color-danger: var(--danger);
+  --color-danger-t: var(--danger-t);
+  --color-land: var(--land);
+  --color-land-line: var(--land-line);
+  --color-sea: var(--sea);
+  --color-glass: var(--glass);
+  --color-glass-line: var(--glass-line);
+  --shadow-float: var(--shadow);
+  --font-sans: -apple-system, "SF Pro Text", system-ui, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+  --font-display: var(--font-barlow), "SF Pro Display", "Arial Narrow", sans-serif;
+  --font-local: var(--font-sinhala), var(--font-tamil), var(--font-sans);
+  --radius-card: 22px;
+  --radius-tile: 14px;
+}
+
+body {
+  background: var(--bg);
+  color: var(--label);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.glass {
+  background: var(--glass);
+  border: 1px solid var(--glass-line);
+  backdrop-filter: blur(20px) saturate(1.6);
+  -webkit-backdrop-filter: blur(20px) saturate(1.6);
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .glass { background: var(--card); backdrop-filter: none; }
+}
+
+.skeleton {
+  background: linear-gradient(90deg, var(--fill) 25%, var(--sep) 50%, var(--fill) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s infinite linear;
+}
+
+@keyframes shimmer {
+  to { background-position: -200% 0; }
+}
+
+@keyframes draw-route {
+  from { stroke-dashoffset: var(--route-length, 2000); }
+  to { stroke-dashoffset: 0; }
+}
+
+.route-draw {
+  stroke-dasharray: var(--route-length, 2000);
+  animation: draw-route 900ms ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .route-draw, .skeleton { animation: none; }
+}

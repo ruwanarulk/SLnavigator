@@ -1,0 +1,216 @@
+// Phase 1 schema: planning tool + read-only provider directory.
+// Marketplace entities (Bid, Booking, Payment, Message, Review, Dispute) arrive in Phase 2.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  TRAVELER
+  GUIDE
+  COMPANY
+  TRANSPORT
+  ADMIN
+}
+
+enum TripStatus {
+  DRAFT
+  ARCHIVED
+}
+
+enum TransportMode {
+  CAR_DRIVER
+  SELF_DRIVE
+  TUK_TUK
+  BUS
+  TRAIN
+}
+
+enum ProviderType {
+  GUIDE
+  COMPANY
+  TRANSPORT
+}
+
+enum VerificationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  RESUBMITTED
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  name         String
+  role         Role     @default(TRAVELER)
+  currency     String   @default("USD")
+  language     String   @default("en")
+  interests    String[]
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  trips     Trip[]
+  auditLogs AuditLog[]
+}
+
+model Location {
+  id             String   @id @default(cuid())
+  slug           String   @unique
+  name           String
+  nameSi         String?
+  nameTa         String?
+  category       String
+  region         String
+  /// Interest ids this place serves (culture, beaches, wildlife, ...).
+  tags           String[]
+  lat            Float
+  lng            Float
+  summary        String
+  description    String
+  bestTime       String?
+  /// Per-person entry fee for foreign visitors, whole USD. Approximate.
+  entryFeeUsd    Int      @default(0)
+  openingHours   String?
+  avgDurationMin Int      @default(120)
+  accessibility  String?
+  safety         String?
+  amenities      String[]
+  rating         Float    @default(0)
+  reviewCount    Int      @default(0)
+  imageUrl       String?
+  /// Placeholder art tone until real photography is licensed.
+  hue            String   @default("sand")
+  /// When ops last checked fees and hours against an official source.
+  verifiedAt     DateTime?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  tripStops      TripStop[]
+  itineraryStops ItineraryStop[]
+
+  @@index([category])
+  @@index([region])
+}
+
+model Trip {
+  id          String     @id @default(cuid())
+  userId      String
+  title       String
+  startDate   DateTime?  @db.Date
+  travelers   Int        @default(2)
+  status      TripStatus @default(DRAFT)
+  /// BudgetSettings from @sln/core.
+  budget      Json
+  itineraryId String?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  itinerary Itinerary? @relation(fields: [itineraryId], references: [id], onDelete: SetNull)
+  stops     TripStop[]
+
+  @@index([userId, status])
+}
+
+/// Join table between Trip and Location, ordered. Holds the leg to the next stop.
+model TripStop {
+  id             String        @id @default(cuid())
+  tripId         String
+  locationId     String
+  position       Int
+  nights         Int           @default(1)
+  modeToNext     TransportMode @default(CAR_DRIVER)
+  legDistanceKm  Int?
+  legDurationMin Int?
+  legSource      String?
+
+  trip     Trip     @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  location Location @relation(fields: [locationId], references: [id], onDelete: Restrict)
+
+  @@unique([tripId, position])
+}
+
+model Itinerary {
+  id        String   @id @default(cuid())
+  slug      String   @unique
+  title     String
+  summary   String
+  days      Int
+  hue       String   @default("sand")
+  tags      String[]
+  published Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  stops ItineraryStop[]
+  trips Trip[]
+}
+
+model ItineraryStop {
+  id          String        @id @default(cuid())
+  itineraryId String
+  locationId  String
+  position    Int
+  nights      Int           @default(1)
+  modeToNext  TransportMode @default(CAR_DRIVER)
+
+  itinerary Itinerary @relation(fields: [itineraryId], references: [id], onDelete: Cascade)
+  location  Location  @relation(fields: [locationId], references: [id], onDelete: Restrict)
+
+  @@unique([itineraryId, position])
+}
+
+/// Phase 1: entered by admins to seed supply. Self-registration opens in Phase 2.
+model ProviderProfile {
+  id                 String             @id @default(cuid())
+  slug               String             @unique
+  type               ProviderType
+  displayName        String
+  city               String
+  bio                String
+  languages          String[]
+  specialties        String[]
+  areas              String[]
+  yearsActive        Int                @default(0)
+  verificationStatus VerificationStatus @default(PENDING)
+  rating             Float              @default(0)
+  reviewCount        Int                @default(0)
+  responseTimeMin    Int?
+  priceFromUsd       Int?
+  priceToUsd         Int?
+  phone              String?
+  email              String?
+  /// Demo data for development; never shown as real in production.
+  isSample           Boolean            @default(false)
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+
+  @@index([type, verificationStatus])
+}
+
+model FxRate {
+  currency  String   @id
+  /// Units of `currency` per 1 USD.
+  perUsd    Float
+  updatedAt DateTime @updatedAt
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  actorId    String
+  action     String
+  targetType String
+  targetId   String
+  notes      String?
+  createdAt  DateTime @default(now())
+
+  actor User @relation(fields: [actorId], references: [id], onDelete: Restrict)
+
+  @@index([targetType, targetId])
+}
