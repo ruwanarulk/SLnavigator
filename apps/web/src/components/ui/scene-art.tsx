@@ -26,16 +26,12 @@ export function SceneArt({
   const c = HUES[hue] ?? HUES.sand;
   return (
     <div className={clsx("relative overflow-hidden", className)} style={{ background: c.sky }}>
-      {imageUrl ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={imageUrl} alt="" className="absolute inset-0 size-full object-cover" />
-      ) : (
-        <svg aria-hidden viewBox="0 0 400 260" preserveAspectRatio="xMidYMax slice" className="absolute inset-0 size-full">
-          <ellipse cx="300" cy="70" rx="22" ry="30" fill={c.sun} opacity=".7" />
-          <path d="M0 200 L110 70 L190 160 L260 110 L400 210 V260 H0Z" fill={c.far} />
-          <path d="M0 240 L140 150 L230 220 L320 170 L400 230 V260 H0Z" fill={c.near} />
-        </svg>
-      )}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={imageUrl || `/images/${HUES[hue] ? hue : "sand"}.jpg`}
+        alt=""
+        className="absolute inset-0 size-full object-cover"
+      />
       {label && (
         <span className="absolute bottom-3 left-3 inline-flex items-center gap-1.5 rounded-full bg-black/55 px-2.5 py-1 text-[12px] font-medium text-white backdrop-blur">
           <Camera aria-hidden className="size-3.5" />
