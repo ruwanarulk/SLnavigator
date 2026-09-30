@@ -9,7 +9,9 @@
     "db:migrate": "prisma migrate dev",
     "db:seed": "prisma db seed",
     "test": "jest src",
-    "test:e2e": "node scripts/with-test-env.js \"prisma migrate deploy && jest test --runInBand\""
+    "test:e2e": "node scripts/with-test-env.js \"prisma migrate deploy && jest test --runInBand\"",
+    "postinstall": "prisma generate",
+    "prebuild": "npm run build --prefix ../../packages/core"
   },
   "prisma": {
     "seed": "ts-node --transpile-only prisma/seed.ts"
