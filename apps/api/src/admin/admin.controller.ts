@@ -139,6 +139,12 @@ export class AdminController {
     });
   }
 
+  /** Deliberately fails so ops can confirm errors reach Sentry. */
+  @Post('debug/sentry')
+  debugSentry(): never {
+    throw new Error('Sentry test error from the Navigator API (triggered by an admin)');
+  }
+
   private audit(actorId: string, action: string, targetType: string, targetId: string, notes?: string) {
     return this.prisma.auditLog.create({ data: { actorId, action, targetType, targetId, notes } });
   }

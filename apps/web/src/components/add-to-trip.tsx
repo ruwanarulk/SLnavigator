@@ -3,6 +3,7 @@
 import { Check, Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { track } from "@/lib/analytics";
 import { api } from "@/lib/api";
 import { emptyDraft, loadDraft, saveDraft } from "@/lib/draft";
 import type { LocationCard, Trip } from "@/lib/types";
@@ -30,6 +31,7 @@ export function AddToTrip({ place }: { place: LocationCard }) {
 
   async function add() {
     setBusy(true);
+    track("stop_added", { source: "place_page" });
     try {
       if (!user) {
         const d = loadDraft() ?? emptyDraft();
@@ -42,6 +44,7 @@ export function AddToTrip({ place }: { place: LocationCard }) {
       }
       if (target === "new") {
         const t = await api<Trip>("/trips", { method: "POST", json: { stops: [{ locationId: place.id, nights: 1, modeToNext: "CAR_DRIVER" }] } });
+        track("trip_created", { source: "place_page", stops: 1 });
         router.push(`/plan/${t.id}`);
         return;
       }

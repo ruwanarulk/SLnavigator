@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useSession } from "@/components/layout/session";
 import { Button } from "@/components/ui/primitives";
+import { track } from "@/lib/analytics";
 import { api } from "@/lib/api";
 import { saveDraft } from "@/lib/draft";
 import type { Itinerary, Trip } from "@/lib/types";
@@ -16,9 +17,11 @@ export function CustomizeButton({ it }: { it: Itinerary }) {
 
   async function go() {
     setBusy(true);
+    track("itinerary_customized", { slug: it.slug });
     try {
       if (user) {
         const trip = await api<Trip>("/trips", { method: "POST", json: { itinerarySlug: it.slug } });
+        track("trip_created", { source: "itinerary", stops: trip.stops.length });
         router.push(`/plan/${trip.id}`);
       } else {
         saveDraft({

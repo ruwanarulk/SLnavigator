@@ -10,6 +10,7 @@ import {
   type TransportMode,
 } from "@sln/core";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { track } from "@/lib/analytics";
 import { api } from "@/lib/api";
 import { loadDraft, saveDraft, type LocalDraft } from "@/lib/draft";
 import type { LocationCard, Trip, TripStop } from "@/lib/types";
@@ -137,6 +138,9 @@ export function usePlanner(trip: Trip | null) {
       const cur = ref.current;
       const budgetSettings = { ...cur.budgetSettings, ...patch.budgetSettings };
       commit({ ...cur, ...patch, budgetSettings });
+      for (const field of [...Object.keys(patch.budgetSettings ?? {}), ...(patch.travelers !== undefined ? ["travelers"] : [])]) {
+        track("budget_adjusted", { field });
+      }
       const { budgetSettings: b, ...rest } = patch;
       saveMeta({ ...rest, ...(b ? { budget: budgetSettings } : {}) });
     },
@@ -160,18 +164,25 @@ export function usePlanner(trip: Trip | null) {
           });
           return copy;
         }),
-      removeStop: (index: number) => setStops((stops) => stops.filter((_, i) => i !== index)),
-      moveStop: (from: number, to: number) =>
+      removeStop: (index: number) => {
+        setStops((stops) => stops.filter((_, i) => i !== index));
+        track("stop_removed", {});
+      },
+      moveStop: (from: number, to: number) => {
+        track("stops_reordered", {});
         setStops((stops) => {
           const copy = [...stops];
           const [s] = copy.splice(from, 1);
           copy.splice(to, 0, s);
           return copy;
-        }),
+        });
+      },
       setNights: (index: number, nights: number) =>
         setStops((stops) => stops.map((s, i) => (i === index ? { ...s, nights: Math.max(0, Math.min(30, nights)) } : s))),
-      setMode: (index: number, mode: TransportMode) =>
-        setStops((stops) => stops.map((s, i) => (i === index ? { ...s, modeToNext: mode } : s))),
+      setMode: (index: number, mode: TransportMode) => {
+        setStops((stops) => stops.map((s, i) => (i === index ? { ...s, modeToNext: mode } : s)));
+        track("transport_mode_changed", { mode });
+      },
       replaceStops: (stops: TripStop[]) => setStops(() => stops),
       setMeta,
     }),

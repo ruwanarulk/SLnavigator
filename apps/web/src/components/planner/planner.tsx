@@ -6,6 +6,7 @@ import { Check, CloudRain, CloudOff, Loader2, Plus, Sparkles, UsersRound } from 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
+import { track } from "@/lib/analytics";
 import { api } from "@/lib/api";
 import { clearDraft, draftToCreateBody, loadInterests } from "@/lib/draft";
 import type { LocationCard, Suggestion, Trip } from "@/lib/types";
@@ -33,6 +34,10 @@ export function Planner({ trip, places }: { trip: Trip | null; places: LocationC
   const [dialog, setDialog] = useState<"bids" | "self" | null>(null);
   const [mobileTab, setMobileTab] = useState<"route" | "budget">("route");
   const [saving, setSaving] = useState(false);
+  const openFork = (path: "self" | "bids") => {
+    setDialog(path);
+    track("fork_opened", { path: path === "self" ? "book_myself" : "guide_bids" });
+  };
 
   const month = state.startDate ? new Date(state.startDate).getMonth() : new Date().getMonth();
   const monsoonRegions = useMemo(
@@ -64,6 +69,7 @@ export function Planner({ trip, places }: { trip: Trip | null; places: LocationC
   function addNear(s: Suggestion) {
     const idx = state.stops.findIndex((st) => st.location.name === s.nearStopName);
     actions.addStop(s.location, idx >= 0 ? idx : undefined);
+    track("stop_added", { source: "suggestion" });
   }
 
   async function saveToAccount() {
@@ -78,6 +84,7 @@ export function Planner({ trip, places }: { trip: Trip | null; places: LocationC
         json: draftToCreateBody({ ...state, itinerarySlug: undefined }),
       });
       clearDraft();
+      track("trip_created", { source: "draft_import", stops: created.stops.length });
       router.push(`/plan/${created.id}`);
     } finally {
       setSaving(false);
@@ -161,7 +168,14 @@ export function Planner({ trip, places }: { trip: Trip | null; places: LocationC
           </ul>
         </details>
       )}
-      <PlaceSearch places={places} onPick={(p) => actions.addStop(p)} placeholder="Add a stop" />
+      <PlaceSearch
+        places={places}
+        onPick={(p) => {
+          actions.addStop(p);
+          track("stop_added", { source: "search" });
+        }}
+        placeholder="Add a stop"
+      />
     </div>
   );
 
@@ -201,10 +215,10 @@ export function Planner({ trip, places }: { trip: Trip | null; places: LocationC
           <div className="pointer-events-auto flex flex-wrap items-center gap-2">
             <PlaceSearch places={places} onPick={(p) => setSelected(p)} placeholder="Search places to add" className="w-full max-w-xs flex-1" />
             <div className="ml-auto hidden gap-2 lg:flex">
-              <Button variant="inverse" onClick={() => setDialog("self")} disabled={state.stops.length < 2} className="shadow-float">
+              <Button variant="inverse" onClick={() => openFork("self")} disabled={state.stops.length < 2} className="shadow-float">
                 Book It Myself
               </Button>
-              <Button onClick={() => setDialog("bids")} disabled={state.stops.length < 1} className="shadow-float">
+              <Button onClick={() => openFork("bids")} disabled={state.stops.length < 1} className="shadow-float">
                 Get Guide Bids
               </Button>
             </div>
@@ -226,7 +240,10 @@ export function Planner({ trip, places }: { trip: Trip | null; places: LocationC
             place={selected}
             inRoute={inRoute >= 0}
             monsoon={seasonFor(selected.region as Region, month) === "monsoon"}
-            onAdd={() => actions.addStop(selected)}
+            onAdd={() => {
+              actions.addStop(selected);
+              track("stop_added", { source: "map_preview" });
+            }}
             onClose={() => setSelected(null)}
           />
         )}
@@ -243,10 +260,10 @@ export function Planner({ trip, places }: { trip: Trip | null; places: LocationC
         {header}
         {!trip && <LocalBanner onSave={saveToAccount} saving={saving} signedIn={!!user} />}
         <div className="my-4 grid grid-cols-2 gap-2">
-          <Button variant="secondary" size="sm" onClick={() => setDialog("self")} disabled={state.stops.length < 2}>
+          <Button variant="secondary" size="sm" onClick={() => openFork("self")} disabled={state.stops.length < 2}>
             Book It Myself
           </Button>
-          <Button size="sm" onClick={() => setDialog("bids")} disabled={!state.stops.length}>
+          <Button size="sm" onClick={() => openFork("bids")} disabled={!state.stops.length}>
             Get Guide Bids
           </Button>
         </div>

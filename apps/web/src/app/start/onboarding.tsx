@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useSession } from "@/components/layout/session";
 import { Button, Chip, DisplayHeading } from "@/components/ui/primitives";
+import { track } from "@/lib/analytics";
 import { api } from "@/lib/api";
 import { emptyDraft, saveDraft, saveInterests } from "@/lib/draft";
 import type { LocationCard, Trip } from "@/lib/types";
@@ -52,6 +53,7 @@ export function Onboarding() {
       const stops: StarterStop[] = withRoute
         ? (await api<{ stops: StarterStop[] }>("/planner/starter", { method: "POST", json: { interests, days } })).stops
         : [];
+      track("onboarding_completed", { interests: interests.length, days, budget_level: level, built_route: withRoute });
 
       if (user) {
         await api("/me", { method: "PATCH", json: { interests } }).catch(() => {});
@@ -63,6 +65,7 @@ export function Onboarding() {
             stops: stops.map((s) => ({ locationId: s.locationId, nights: s.nights, modeToNext: s.modeToNext })),
           },
         });
+        track("trip_created", { source: "onboarding", stops: trip.stops.length });
         router.push(`/plan/${trip.id}`);
       } else {
         saveDraft({

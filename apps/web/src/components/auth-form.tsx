@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState, type FormEvent } from "react";
+import { track } from "@/lib/analytics";
 import { api } from "@/lib/api";
 import { clearDraft, draftToCreateBody, loadDraft, loadInterests } from "@/lib/draft";
 import type { Trip, User } from "@/lib/types";
@@ -36,9 +37,12 @@ export function AuthForm({ mode }: { mode: "signin" | "signup" }) {
       // Carry over anything planned before signing in.
       let next = safeNext(params.get("next"));
       const draft = loadDraft();
-      if (draft?.stops.length) {
+      const importDraft = !!draft?.stops.length;
+      track(mode === "signup" ? "signed_up" : "signed_in", { imported_draft: importDraft });
+      if (draft && importDraft) {
         const trip = await api<Trip>("/trips", { method: "POST", json: draftToCreateBody(draft) });
         clearDraft();
+        track("trip_created", { source: "draft_import", stops: trip.stops.length });
         next = `/plan/${trip.id}`;
       }
       const interests = loadInterests();

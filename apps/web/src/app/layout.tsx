@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Barlow_Condensed, Noto_Sans_Sinhala, Noto_Sans_Tamil } from "next/font/google";
+import { ConsentBanner } from "@/components/layout/consent-banner";
 import { BottomNav, Footer, Header } from "@/components/layout/header";
 import { SessionProvider } from "@/components/layout/session";
 import { ServiceWorker } from "@/components/layout/service-worker";
@@ -39,6 +40,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
           </main>
           <Footer />
           <BottomNav />
+          <ConsentBanner />
         </SessionProvider>
         <ServiceWorker />
       </body>

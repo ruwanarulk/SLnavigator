@@ -2,6 +2,7 @@
 
 import { convert, formatMoney } from "@sln/core";
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { identify } from "@/lib/analytics";
 import { api } from "@/lib/api";
 import type { FxRates, User } from "@/lib/types";
 import { useStoredString } from "@/lib/use-client";
@@ -26,6 +27,10 @@ export function SessionProvider({ initialUser, children }: { initialUser: User |
   const [rates, setRates] = useState<Record<string, number>>({ USD: 1 });
   // Explicit choice this session, then the account setting, then this device's last choice.
   const currency = chosen ?? user?.currency ?? stored ?? "USD";
+
+  useEffect(() => {
+    identify(user ? { id: user.id, role: user.role } : null);
+  }, [user]);
 
   useEffect(() => {
     api<FxRates>("/fx")
