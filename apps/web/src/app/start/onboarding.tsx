@@ -1,6 +1,6 @@
 "use client";
 
-import { INTERESTS, type BudgetLevel, type StayTier } from "@sln/core";
+import { DEFAULT_BUDGET, INTERESTS } from "@sln/core";
 import clsx from "clsx";
 import { Check, Compass } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -19,12 +19,6 @@ const LENGTHS = [
   { label: "14+", days: 14 },
 ];
 
-const LEVELS: { id: BudgetLevel; label: string; stay: StayTier }[] = [
-  { id: "shoestring", label: "Shoestring", stay: "guesthouse" },
-  { id: "comfortable", label: "Comfortable", stay: "boutique" },
-  { id: "splurge", label: "Splurge", stay: "luxury" },
-];
-
 interface StarterStop {
   locationId: string;
   nights: number;
@@ -37,7 +31,6 @@ export function Onboarding() {
   const { user } = useSession();
   const [interests, setInterests] = useState<string[]>(user?.interests ?? []);
   const [days, setDays] = useState(10);
-  const [level, setLevel] = useState<BudgetLevel>("comfortable");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -48,12 +41,12 @@ export function Onboarding() {
     setError(null);
     try {
       saveInterests(interests);
-      const tier = LEVELS.find((l) => l.id === level)!;
-      const budget = { stayTier: tier.stay, foodLevel: level, guideDays: 0, bufferPct: 10 };
+      // Budget is tuned later in the planner; start everyone on the defaults.
+      const budget = DEFAULT_BUDGET;
       const stops: StarterStop[] = withRoute
         ? (await api<{ stops: StarterStop[] }>("/planner/starter", { method: "POST", json: { interests, days } })).stops
         : [];
-      track("onboarding_completed", { interests: interests.length, days, budget_level: level, built_route: withRoute });
+      track("onboarding_completed", { interests: interests.length, days, built_route: withRoute });
 
       if (user) {
         await api("/me", { method: "PATCH", json: { interests } }).catch(() => {});
@@ -104,7 +97,6 @@ export function Onboarding() {
       </fieldset>
 
       <Segment label="Trip length" options={LENGTHS.map((l) => [String(l.days), l.label])} value={String(days)} onChange={(v) => setDays(Number(v))} />
-      <Segment label="Budget per person" options={LEVELS.map((l) => [l.id, l.label])} value={level} onChange={(v) => setLevel(v as BudgetLevel)} />
 
       {error && (
         <p role="alert" className="mt-6 rounded-tile bg-danger-t p-3 text-[14px] text-danger">

@@ -6,7 +6,7 @@ import posthog from "posthog-js";
  * All calls are no-ops until PostHog is configured and initialised.
  */
 export type AnalyticsEvent =
-  | { name: "onboarding_completed"; props: { interests: number; days: number; budget_level: string; built_route: boolean } }
+  | { name: "onboarding_completed"; props: { interests: number; days: number; built_route: boolean } }
   | { name: "trip_created"; props: { source: "onboarding" | "itinerary" | "place_page" | "draft_import"; stops: number } }
   | { name: "stop_added"; props: { source: "search" | "suggestion" | "map_preview" | "place_page" } }
   | { name: "stop_removed"; props: Record<string, never> }
