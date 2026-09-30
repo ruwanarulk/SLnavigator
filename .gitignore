@@ -9,3 +9,4 @@ dist
 coverage
 .next-stale*
 *.tsbuildinfo
+.env.staging
