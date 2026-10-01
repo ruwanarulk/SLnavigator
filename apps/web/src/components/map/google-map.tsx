@@ -52,15 +52,36 @@ function FailureWatch({ container }: { container: React.RefObject<HTMLDivElement
   return null;
 }
 
+/** The whole island, for maps with no route (Explore, an empty planner). */
+const ISLAND_BOUNDS = { north: 9.85, south: 5.9, west: 79.65, east: 81.9 };
+/** Extra room on the right, where station names hang off their dots. */
+const ROUTE_PADDING = { top: 36, bottom: 36, left: 36, right: 110 };
+
+/** Frames the route (or the island) and refits whenever the stops change. */
 function FitRoute({ route }: Pick<TripMapProps, "route">) {
   const map = useMap();
-  const key = route.map((r) => r.location.id).join("|");
+  const key = route.map((r) => `${r.location.lat},${r.location.lng}`).join("|");
   useEffect(() => {
-    if (!map || route.length < 2) return;
-    const bounds = new google.maps.LatLngBounds();
-    route.forEach((r) => bounds.extend({ lat: r.location.lat, lng: r.location.lng }));
-    map.fitBounds(bounds, 80);
-    // Refit only when the set/order of stops changes.
+    if (!map) return;
+    const fit = () => {
+      if (route.length === 1) {
+        map.setCenter(route[0].location);
+        map.setZoom(10);
+        return;
+      }
+      if (route.length === 0) {
+        map.fitBounds(ISLAND_BOUNDS, 16);
+        return;
+      }
+      const bounds = new google.maps.LatLngBounds();
+      route.forEach((r) => bounds.extend({ lat: r.location.lat, lng: r.location.lng }));
+      map.fitBounds(bounds, ROUTE_PADDING);
+    };
+    fit();
+    // A fit issued before the first render can be lost; repeat it once the map is idle.
+    const idle = google.maps.event.addListenerOnce(map, "idle", fit);
+    return () => idle.remove();
+    // Refit only when the stops themselves change.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [map, key]);
   return null;
@@ -94,6 +115,8 @@ export function GoogleTripMap({
           zoomControl={!compact}
           keyboardShortcuts={!compact}
           clickableIcons={false}
+          // Lets fitBounds pick an exact zoom instead of rounding down a whole level.
+          isFractionalZoomEnabled
           className="size-full"
         >
           <FitRoute route={route} />
