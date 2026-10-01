@@ -8,6 +8,8 @@ import { useState } from "react";
 import { useSession } from "@/components/layout/session";
 import { fmtRange, initials, InclusionChips, ProgressSteps } from "@/components/marketplace/shared";
 import { StartConversation } from "@/components/messaging/start-conversation";
+import { ReportProblem } from "@/components/reviews/report-problem";
+import { ReviewPanel } from "@/components/reviews/review-panel";
 import { Dialog } from "@/components/ui/dialog";
 import { Button, ButtonLink, Card, DisplayHeading, Pill, Rating } from "@/components/ui/primitives";
 import { api } from "@/lib/api";
@@ -142,6 +144,9 @@ export function BookingView({ initial }: { initial: BookingData }) {
             <InclusionChips ids={b.inclusions} />
             <p className="mt-3 text-[14px] leading-relaxed">{b.pitch}</p>
           </Card>
+
+          {b.status === "CONFIRMED" && <ReviewPanel bookingId={b.id} viewer={b.viewer} />}
+          <ReportProblem bookingId={b.id} />
         </div>
 
         <div className="space-y-5">

@@ -6,6 +6,8 @@ import { JwtModule } from '@nestjs/jwt';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { AdminController } from './admin/admin.controller';
 import { VerificationController } from './admin/verification.controller';
+import { AdminDisputesController, BookingDisputesController } from './disputes/disputes.controller';
+import { DisputesService } from './disputes/disputes.service';
 import { MessagingController } from './messaging/messaging.controller';
 import { MessagingService } from './messaging/messaging.service';
 import { NotificationsModule } from './notifications/notifications.module';
@@ -23,6 +25,8 @@ import { PlacesController } from './places/places.controller';
 import { BookingsController, TripChoiceController } from './bookings/bookings.controller';
 import { BookingsService } from './bookings/bookings.service';
 import { ProviderRequestsController, TripPostController } from './posts/posts.controller';
+import { BookingReviewController, CronController, ProviderReviewsController } from './reviews/reviews.controller';
+import { ReviewsService } from './reviews/reviews.service';
 import { PostsService } from './posts/posts.service';
 import { PlannerController } from './planner/planner.controller';
 import { PrismaModule } from './prisma/prisma.service';
@@ -74,6 +78,11 @@ class HealthController {
     TripChoiceController,
     BookingsController,
     MessagingController,
+    BookingReviewController,
+    ProviderReviewsController,
+    CronController,
+    BookingDisputesController,
+    AdminDisputesController,
   ],
   providers: [
     AuthService,
@@ -81,6 +90,8 @@ class HealthController {
     PostsService,
     BookingsService,
     MessagingService,
+    ReviewsService,
+    DisputesService,
     TripsService,
     LegsService,
     RequireAuthGuard,

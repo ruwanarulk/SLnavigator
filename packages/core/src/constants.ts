@@ -73,3 +73,36 @@ export type ServiceNeedId = (typeof SERVICE_NEEDS)[number]['id'];
 
 /** Bidding windows a traveller can choose, in hours. */
 export const BID_WINDOWS = [24, 48, 72] as const;
+
+export type ReviewDirection = 'TRAVELLER_TO_PROVIDER' | 'PROVIDER_TO_TRAVELLER';
+
+/** What each side is asked to score, 1 to 5. Travellers' scores are public; providers' stay between providers. */
+export const REVIEW_CRITERIA: Record<ReviewDirection, readonly { id: string; label: string }[]> = {
+  TRAVELLER_TO_PROVIDER: [
+    { id: 'punctuality', label: 'Punctuality' },
+    { id: 'knowledge', label: 'Knowledge & communication' },
+    { id: 'value', label: 'Value for money' },
+    { id: 'safety', label: 'Safety' },
+  ],
+  PROVIDER_TO_TRAVELLER: [
+    { id: 'clarity', label: 'Clarity of requirements' },
+    { id: 'respect', label: 'Respectfulness' },
+    { id: 'reliability', label: 'Reliability' },
+  ],
+};
+
+/** Reviews open this many days after the trip's last day, to reflect the real experience. */
+export const REVIEW_OPENS_AFTER_DAYS = 3;
+/** Both reviews are revealed once both are in, or this many days after the window opens. */
+export const REVIEW_REVEAL_AFTER_DAYS = 14;
+/** Last day a review can be submitted, counted from when the window opens. */
+export const REVIEW_CLOSES_AFTER_DAYS = 30;
+
+export const DISPUTE_REASONS = [
+  { id: 'NO_SHOW', label: 'Someone did not show up' },
+  { id: 'SAFETY', label: 'A safety concern' },
+  { id: 'SERVICE', label: 'The service was not as agreed' },
+  { id: 'PRICE', label: 'A disagreement about price or payment' },
+  { id: 'OTHER', label: 'Something else' },
+] as const;
+export type DisputeReasonId = (typeof DISPUTE_REASONS)[number]['id'];

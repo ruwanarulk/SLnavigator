@@ -195,7 +195,7 @@ function StatusLine({ trip, href }: { trip: Trip; href: string }) {
     return (
       <Link href={href} className="flex items-center justify-between rounded-tile bg-ok-t px-3 py-2 text-[13px] font-medium text-ok">
         <span>{trip.status === "BOOKED" ? "Booked with a verified guide" : "Trip completed"}</span>
-        <span>View →</span>
+        <span>{trip.status === "COMPLETED" ? "Leave a review →" : "View →"}</span>
       </Link>
     );
   }

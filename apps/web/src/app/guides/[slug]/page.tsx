@@ -4,6 +4,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { initials, replyTime, TYPE_LABEL } from "@/components/provider-card";
 import { Button, ButtonLink, Card, DisplayHeading, Pill, Rating, SampleBadge, VerifiedBadge } from "@/components/ui/primitives";
+import { ProviderReviews, type PublicReviews } from "@/components/reviews/provider-reviews";
 import { SceneArt } from "@/components/ui/scene-art";
 import { ApiError } from "@/lib/api";
 import { serverApi } from "@/lib/server-api";
@@ -24,7 +25,10 @@ export async function generateMetadata(props: PageProps<"/guides/[slug]">): Prom
 }
 
 export default async function ProviderPage(props: PageProps<"/guides/[slug]">) {
-  const p = await load((await props.params).slug);
+  const slug = (await props.params).slug;
+  const p = await load(slug);
+  // Sample profiles have no real bookings behind them, so there is nothing to fetch.
+  const reviews = p.isSample ? null : await serverApi<PublicReviews>(`/providers/${encodeURIComponent(slug)}/reviews`).catch(() => null);
   const areas = p.areas.map((a) => REGIONS.find((r) => r.id === a)?.label ?? a);
 
   return (
@@ -77,9 +81,11 @@ export default async function ProviderPage(props: PageProps<"/guides/[slug]">) {
               ))}
             </div>
           </div>
-          <Card className="p-5 text-[14px] text-label2">
-            Reviews appear here once travellers complete paid trips booked through Navigator. Only completed bookings can leave a review.
-          </Card>
+          {reviews ? (
+            <ProviderReviews data={reviews} />
+          ) : (
+            <Card className="p-5 text-[14px] text-label2">Reviews appear here once travellers complete trips booked through Navigator. Only completed bookings can leave a review.</Card>
+          )}
         </div>
         <Card className="divide-y divide-sep p-5 text-[14px]">
           <Row icon={Languages} label="Languages" value={p.languages.join(", ")} />

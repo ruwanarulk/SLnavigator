@@ -5,6 +5,7 @@ import clsx from "clsx";
 import { useState, type FormEvent } from "react";
 import { Button, Card, DisplayHeading, Pill } from "@/components/ui/primitives";
 import { api } from "@/lib/api";
+import { DisputesQueue } from "./disputes-queue";
 import { VerificationQueue } from "./verification-queue";
 
 interface AdminProvider {
@@ -38,7 +39,7 @@ interface AdminLocation {
 const STATUS_TONE = { PENDING: "signal", APPROVED: "ok", REJECTED: "danger", RESUBMITTED: "accent" } as const;
 
 export function AdminConsole({ providers: initialProviders, locations: initialLocations }: { providers: AdminProvider[]; locations: AdminLocation[] }) {
-  const [tab, setTab] = useState<"verification" | "providers" | "locations">("verification");
+  const [tab, setTab] = useState<"verification" | "disputes" | "providers" | "locations">("verification");
   const [providers, setProviders] = useState(initialProviders);
   const [locations, setLocations] = useState(initialLocations);
   const [editing, setEditing] = useState<AdminProvider | "new" | null>(null);
@@ -47,18 +48,20 @@ export function AdminConsole({ providers: initialProviders, locations: initialLo
     <div className="mx-auto max-w-[1320px] px-4 pb-24 pt-8 md:px-8">
       <p className="text-[12px] font-semibold uppercase tracking-[0.2em] text-label2">Admin · Operations</p>
       <DisplayHeading as="h1" className="mt-1 text-[44px]">
-        {tab === "verification" ? "Verification queue" : tab === "providers" ? "Provider directory" : "Location facts"}
+        {tab === "verification" ? "Verification queue" : tab === "disputes" ? "Reported problems" : tab === "providers" ? "Provider directory" : "Location facts"}
       </DisplayHeading>
       <p className="text-[14px] text-label2">
         {tab === "verification"
           ? "Pending accounts are invisible to travellers until approved. Every decision is written to the audit log."
+          : tab === "disputes"
+          ? "Read both sides, contact them if needed, then record what was decided. Both people are notified."
           : tab === "providers"
           ? "Phase 1: profiles are entered by the team. Pending profiles stay invisible to travellers until approved. Every change is written to the audit log."
           : "Check fees and hours against an official source, then mark as verified."}
       </p>
 
-      <div role="tablist" className="mt-5 inline-grid grid-cols-3 rounded-full bg-fill p-1">
-        {(["verification", "providers", "locations"] as const).map((t) => (
+      <div role="tablist" className="mt-5 inline-grid grid-cols-4 rounded-full bg-fill p-1">
+        {(["verification", "disputes", "providers", "locations"] as const).map((t) => (
           <button key={t} role="tab" aria-selected={tab === t} onClick={() => setTab(t)} className={clsx("h-9 rounded-full px-5 text-[14px] font-medium capitalize", tab === t ? "bg-card shadow-sm" : "text-label2")}>
             {t}
           </button>
@@ -67,6 +70,8 @@ export function AdminConsole({ providers: initialProviders, locations: initialLo
 
       {tab === "verification" ? (
         <VerificationQueue />
+      ) : tab === "disputes" ? (
+        <DisputesQueue />
       ) : tab === "providers" ? (
         <div className="mt-6 grid gap-6 lg:grid-cols-[1.4fr_1fr]">
           <Card className="overflow-x-auto p-2">

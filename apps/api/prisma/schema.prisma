@@ -51,6 +51,24 @@ enum BookingStatus {
   CANCELLED
 }
 
+enum ReviewDirection {
+  TRAVELLER_TO_PROVIDER
+  PROVIDER_TO_TRAVELLER
+}
+
+enum DisputeReason {
+  NO_SHOW
+  SAFETY
+  SERVICE
+  PRICE
+  OTHER
+}
+
+enum DisputeStatus {
+  OPEN
+  RESOLVED
+}
+
 enum ServiceNeed {
   GUIDE_AND_TRANSPORT
   GUIDE_ONLY
@@ -402,6 +420,8 @@ model Booking {
   bid       Bid             @relation(fields: [bidId], references: [id], onDelete: Restrict)
   traveller User            @relation(fields: [travellerId], references: [id], onDelete: Restrict)
   provider  ProviderProfile @relation(fields: [providerId], references: [id], onDelete: Restrict)
+  reviews   Review[]
+  disputes  Dispute[]
 
   @@index([tripId])
   @@index([travellerId])
@@ -441,4 +461,45 @@ model Message {
   conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
 
   @@index([conversationId, createdAt])
+}
+
+/// One review per person per booking, written blind: nothing is shown until
+/// both sides have submitted or the reveal deadline passes.
+model Review {
+  id         String          @id @default(cuid())
+  bookingId  String
+  direction  ReviewDirection
+  raterId    String
+  /// The provider on the booking, so ratings roll up to a profile.
+  providerId String
+  /// Criterion id to 1-5 score.
+  scores     Json
+  /// Mean of the scores, to one decimal.
+  overall    Float
+  recommend  Boolean
+  text       String          @default("")
+  createdAt  DateTime        @default(now())
+
+  booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  @@unique([bookingId, direction])
+  @@index([providerId, direction])
+}
+
+model Dispute {
+  id           String        @id @default(cuid())
+  bookingId    String
+  raisedById   String
+  reason       DisputeReason
+  details      String
+  status       DisputeStatus @default(OPEN)
+  resolution   String?
+  resolvedById String?
+  resolvedAt   DateTime?
+  createdAt    DateTime      @default(now())
+
+  booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  @@index([status, createdAt])
+  @@index([bookingId])
 }
