@@ -29,7 +29,7 @@ export class PlannerController {
   @Post('starter')
   @HttpCode(200)
   async starter(@Body() dto: StarterDto) {
-    const all = await this.prisma.location.findMany({ select: LOCATION_CARD });
+    const all = await this.prisma.location.findMany({ where: { source: 'CURATED' }, select: LOCATION_CARD });
     const stops = buildStarterRoute(all, dto.interests, dto.days, dto.month ?? new Date().getMonth());
     const byId = new Map(all.map((l) => [l.id, l]));
     return { stops: stops.map((s) => ({ ...s, location: byId.get(s.locationId)! })) };
@@ -38,9 +38,15 @@ export class PlannerController {
   @Post('suggestions')
   @HttpCode(200)
   async suggestions(@Body() dto: SuggestDto) {
-    const all = await this.prisma.location.findMany({ select: LOCATION_CARD });
+    const all = await this.prisma.location.findMany({ where: { source: 'CURATED' }, select: LOCATION_CARD });
     const byId = new Map(all.map((l) => [l.id, l]));
-    const stops = dto.locationIds.map((id) => byId.get(id)).filter((l) => !!l);
+    // Stops may include a Google-picked place; it anchors "near X" ideas but is never suggested itself.
+    const custom = await this.prisma.location.findMany({
+      where: { id: { in: dto.locationIds }, source: 'GOOGLE' },
+      select: LOCATION_CARD,
+    });
+    const anchors = new Map([...byId, ...custom.map((l) => [l.id, l] as const)]);
+    const stops = dto.locationIds.map((id) => anchors.get(id)).filter((l) => !!l);
     return suggestNearby(stops, all, dto.interests).map((s) => ({ ...s, location: byId.get(s.location.id)! }));
   }
 }

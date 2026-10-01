@@ -187,9 +187,9 @@ export function Planner({ trip, places }: { trip: Trip | null; places: LocationC
       )}
       <PlaceSearch
         places={places}
-        onPick={(p) => {
+        onPick={(p, via) => {
           actions.addStop(p);
-          track("stop_added", { source: "search" });
+          track("stop_added", { source: via === "google" ? "google_search" : "search" });
         }}
         placeholder="Add a stop"
       />
@@ -248,7 +248,7 @@ export function Planner({ trip, places }: { trip: Trip | null; places: LocationC
             monsoon={seasonFor(selected.region as Region, month) === "monsoon"}
             onAdd={() => {
               actions.addStop(selected);
-              track("stop_added", { source: "map_preview" });
+              track("stop_added", { source: selected.source === "GOOGLE" ? "google_search" : "map_preview" });
             }}
             onClose={() => setSelected(null)}
           />
@@ -332,6 +332,7 @@ function PreviewCard({
   onAdd: () => void;
   onClose: () => void;
 }) {
+  const custom = place.source === "GOOGLE";
   return (
     <div className="absolute bottom-10 left-3 right-3 z-20 overflow-hidden rounded-card bg-card shadow-float sm:left-auto sm:right-20 sm:w-72 md:bottom-6">
       <SceneArt hue={place.hue} imageUrl={place.imageUrl} label={place.name} className="h-28" />
@@ -340,14 +341,18 @@ function PreviewCard({
       </button>
       <div className="space-y-2 p-4">
         <div className="flex items-start justify-between gap-2">
-          <div>
+          <div className="min-w-0">
             <p className="font-semibold">{place.name}</p>
-            <p className="text-[12px] text-label2">
-              <span className="capitalize">{place.category}</span> · ~{formatDuration(place.avgDurationMin)}
-              {place.entryFeeUsd > 0 ? ` · ~$${place.entryFeeUsd} entry` : " · Free"}
-            </p>
+            {custom ? (
+              <p className="line-clamp-2 text-[12px] text-label2">{place.summary}</p>
+            ) : (
+              <p className="text-[12px] text-label2">
+                <span className="capitalize">{place.category}</span> · ~{formatDuration(place.avgDurationMin)}
+                {place.entryFeeUsd > 0 ? ` · ~$${place.entryFeeUsd} entry` : " · Free"}
+              </p>
+            )}
           </div>
-          <Rating value={place.rating} />
+          {!custom && <Rating value={place.rating} />}
         </div>
         {monsoon && (
           <p className="flex items-center gap-1 text-[12px] text-signal-ink">
@@ -360,9 +365,11 @@ function PreviewCard({
               <Plus className="size-4" /> Add to Trip
             </Button>
           )}
-          <Link href={`/places/${place.slug}`} className="text-[13px] font-semibold text-accent-ink underline underline-offset-4">
-            Open Place Page
-          </Link>
+          {!custom && (
+            <Link href={`/places/${place.slug}`} className="text-[13px] font-semibold text-accent-ink underline underline-offset-4">
+              Open Place Page
+            </Link>
+          )}
         </div>
       </div>
     </div>

@@ -113,7 +113,7 @@ export class AdminController {
 
   @Get('locations')
   locations() {
-    return this.prisma.location.findMany({ orderBy: [{ verifiedAt: { sort: 'asc', nulls: 'first' } }, { name: 'asc' }] });
+    return this.prisma.location.findMany({ where: { source: 'CURATED' }, orderBy: [{ verifiedAt: { sort: 'asc', nulls: 'first' } }, { name: 'asc' }] });
   }
 
   @Patch('locations/:id')

@@ -8,7 +8,7 @@ import posthog from "posthog-js";
 export type AnalyticsEvent =
   | { name: "onboarding_completed"; props: { interests: number; days: number; built_route: boolean } }
   | { name: "trip_created"; props: { source: "onboarding" | "itinerary" | "place_page" | "draft_import"; stops: number } }
-  | { name: "stop_added"; props: { source: "search" | "suggestion" | "map_preview" | "place_page" } }
+  | { name: "stop_added"; props: { source: "search" | "google_search" | "suggestion" | "map_preview" | "place_page" } }
   | { name: "stop_removed"; props: Record<string, never> }
   | { name: "stops_reordered"; props: Record<string, never> }
   | { name: "transport_mode_changed"; props: { mode: string } }

@@ -20,6 +20,7 @@ export const LOCATION_CARD = {
   reviewCount: true,
   imageUrl: true,
   hue: true,
+  source: true,
 } satisfies Prisma.LocationSelect;
 
 export type LocationCard = Prisma.LocationGetPayload<{ select: typeof LOCATION_CARD }>;

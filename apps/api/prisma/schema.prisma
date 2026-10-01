@@ -48,6 +48,13 @@ enum VerificationStatus {
   RESUBMITTED
 }
 
+enum LocationSource {
+  /// Hand-written content with fees, hours and notes.
+  CURATED
+  /// A place a traveller picked from Google search; coordinates only.
+  GOOGLE
+}
+
 model User {
   id           String   @id @default(cuid())
   email        String   @unique
@@ -65,8 +72,8 @@ model User {
 }
 
 model Location {
-  id             String   @id @default(cuid())
-  slug           String   @unique
+  id             String         @id @default(cuid())
+  slug           String         @unique
   name           String
   nameSi         String?
   nameTa         String?
@@ -80,27 +87,32 @@ model Location {
   description    String
   bestTime       String?
   /// Per-person entry fee for foreign visitors, whole USD. Approximate.
-  entryFeeUsd    Int      @default(0)
+  entryFeeUsd    Int            @default(0)
   openingHours   String?
-  avgDurationMin Int      @default(120)
+  avgDurationMin Int            @default(120)
   accessibility  String?
   safety         String?
   amenities      String[]
-  rating         Float    @default(0)
-  reviewCount    Int      @default(0)
+  rating         Float          @default(0)
+  reviewCount    Int            @default(0)
   imageUrl       String?
   /// Placeholder art tone until real photography is licensed.
-  hue            String   @default("sand")
+  hue            String         @default("sand")
   /// When ops last checked fees and hours against an official source.
   verifiedAt     DateTime?
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  source         LocationSource @default(CURATED)
+  /// Google Places id for source = GOOGLE, so a place is only stored once.
+  googlePlaceId  String?        @unique
+  address        String?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
 
   tripStops      TripStop[]
   itineraryStops ItineraryStop[]
 
   @@index([category])
   @@index([region])
+  @@index([source])
 }
 
 model Trip {

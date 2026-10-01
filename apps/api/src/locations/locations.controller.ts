@@ -19,6 +19,8 @@ export class LocationsController {
   @Get()
   list(@Query() query: LocationQuery) {
     const where: Prisma.LocationWhereInput = {
+      // Places travellers picked from Google search are private to their trips.
+      source: 'CURATED',
       category: query.category,
       region: query.region,
       tags: query.tag ? { has: query.tag } : undefined,
@@ -38,6 +40,7 @@ export class LocationsController {
     const nearby = await this.prisma.location.findMany({
       where: {
         id: { not: location.id },
+        source: 'CURATED',
         lat: { gte: location.lat - 0.25, lte: location.lat + 0.25 },
         lng: { gte: location.lng - 0.25, lte: location.lng + 0.25 },
       },

@@ -29,6 +29,8 @@ export interface LocationCard {
   reviewCount: number;
   imageUrl: string | null;
   hue: string;
+  /** GOOGLE = picked from Google search (coordinates only). Missing on drafts saved before this existed. */
+  source?: "CURATED" | "GOOGLE";
 }
 
 export interface LocationDetail extends LocationCard {

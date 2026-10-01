@@ -41,6 +41,7 @@ Open http://localhost:3000. Sign in to `/admin` with the `SEED_ADMIN_*` account 
 ### Google Maps
 
 - **Browser map:** set `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` (Maps JavaScript API) in `apps/web/.env.local`. Without it, the app draws its built-in stylised island map. That fallback is fully usable for development.
+- **Place search (Google Places API (New)):** the planner's search boxes also find any place in Sri Lanka, not just the curated list. Enable **Places API (New)** in Google Cloud and add it to the browser key's API restrictions (alongside Maps JavaScript API). Without it, search shows curated places only. Google-picked places are stored with coordinates only, so they have no fees, hours or place page, and they never appear in Explore or suggestions.
 - **Drive times:** set `GOOGLE_MAPS_SERVER_KEY` (Routes API) in `apps/api/.env`. Without it, legs use terrain-aware estimates, marked "~" in the UI. Trains and buses always use estimates, because Google has no reliable Sri Lankan transit data.
 
 ## Tests

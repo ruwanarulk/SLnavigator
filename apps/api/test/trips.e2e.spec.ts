@@ -126,6 +126,55 @@ describe('Trips API (e2e)', () => {
       .expect(400);
   });
 
+  describe('Google-picked places', () => {
+    const placeId = `ChIJe2e${stamp}abcdefghij`;
+    const body = { placeId, name: 'Hotel Test Beach', address: '1 Beach Rd, Mirissa', lat: 5.9483, lng: 80.4716 };
+
+    afterAll(async () => {
+      await prisma.tripStop.deleteMany({ where: { location: { googlePlaceId: placeId } } });
+      await prisma.location.deleteMany({ where: { googlePlaceId: placeId } });
+    });
+
+    it('stores a place once and reuses it', async () => {
+      const first = await request(app.getHttpServer()).post('/api/places/custom').send(body).expect(200);
+      expect(first.body).toMatchObject({ name: 'Hotel Test Beach', category: 'custom', source: 'GOOGLE', entryFeeUsd: 0 });
+      expect(first.body.region).toBeTruthy();
+      const again = await request(app.getHttpServer()).post('/api/places/custom').send({ ...body, name: 'Renamed by someone else' }).expect(200);
+      expect(again.body.id).toBe(first.body.id);
+      expect(again.body.name).toBe('Hotel Test Beach');
+    });
+
+    it('rejects coordinates outside Sri Lanka and bad input', async () => {
+      await request(app.getHttpServer()).post('/api/places/custom').send({ ...body, placeId: 'ChIJoutsideoutside1', lat: 51.5, lng: -0.12 }).expect(400);
+      await request(app.getHttpServer()).post('/api/places/custom').send({ ...body, placeId: 'short' }).expect(400);
+      await request(app.getHttpServer()).post('/api/places/custom').send({ ...body, extra: 'x' }).expect(400);
+    });
+
+    it('stays out of public lists and suggestions', async () => {
+      const list = (await request(app.getHttpServer()).get('/api/locations').expect(200)).body as { name: string }[];
+      expect(list.find((l) => l.name === 'Hotel Test Beach')).toBeUndefined();
+      const place = (await request(app.getHttpServer()).post('/api/places/custom').send(body)).body;
+      const sugg = await request(app.getHttpServer()).post('/api/planner/suggestions').send({ locationIds: [place.id], interests: [] }).expect(200);
+      expect(sugg.body.some((s: { location: { id: string } }) => s.location.id === place.id)).toBe(false);
+    });
+
+    it('works as a trip stop with legs and a budget', async () => {
+      const place = (await request(app.getHttpServer()).post('/api/places/custom').send(body)).body;
+      const res = await request(app.getHttpServer())
+        .post('/api/trips')
+        .set('Cookie', aliceCookie)
+        .send({
+          stops: [
+            { locationId: locationIds[0], nights: 1, modeToNext: 'CAR_DRIVER' },
+            { locationId: place.id, nights: 0, modeToNext: 'CAR_DRIVER' },
+          ],
+        })
+        .expect(201);
+      expect(res.body.stops[1].location.name).toBe('Hotel Test Beach');
+      expect(res.body.stops[0].leg.distanceKm).toBeGreaterThan(0);
+    });
+  });
+
   it('keeps admin routes admin-only', async () => {
     await request(app.getHttpServer()).get('/api/admin/providers').set('Cookie', aliceCookie).expect(403);
     await request(app.getHttpServer()).get('/api/admin/providers').expect(401);

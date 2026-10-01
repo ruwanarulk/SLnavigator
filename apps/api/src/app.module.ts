@@ -13,6 +13,7 @@ import { FxController } from './fx/fx.controller';
 import { ItinerariesController } from './itineraries/itineraries.controller';
 import { LocationsController } from './locations/locations.controller';
 import { MeController } from './me/me.controller';
+import { PlacesController } from './places/places.controller';
 import { PlannerController } from './planner/planner.controller';
 import { PrismaModule } from './prisma/prisma.service';
 import { ProvidersController } from './providers/providers.controller';
@@ -52,6 +53,7 @@ class HealthController {
     ProvidersController,
     FxController,
     PlannerController,
+    PlacesController,
     TripsController,
     AdminController,
   ],
