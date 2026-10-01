@@ -6,7 +6,9 @@ import { Compass, Globe, Map, Route, UserRound } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { api } from "@/lib/api";
+import { isProviderRole } from "@/lib/types";
 import { ButtonLink, buttonClass } from "../ui/primitives";
+import { NotificationBell } from "./notification-bell";
 import { Logo } from "../ui/logo";
 import { useSession } from "./session";
 
@@ -67,9 +69,16 @@ export function Header() {
                   Admin
                 </Link>
               )}
-              <Link href="/trips" className={clsx(buttonClass("secondary", "sm"), "hidden md:inline-flex")}>
-                My Trips
-              </Link>
+              <NotificationBell />
+              {isProviderRole(user.role) ? (
+                <Link href="/provider" className={clsx(buttonClass("secondary", "sm"), "hidden md:inline-flex")}>
+                  Provider dashboard
+                </Link>
+              ) : (
+                <Link href="/trips" className={clsx(buttonClass("secondary", "sm"), "hidden md:inline-flex")}>
+                  My Trips
+                </Link>
+              )}
               <button onClick={signOut} className={clsx(buttonClass("ghost", "sm"), "hidden md:inline-flex")}>
                 Sign out
               </button>

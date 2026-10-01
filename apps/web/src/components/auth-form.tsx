@@ -6,7 +6,7 @@ import { useState, type FormEvent } from "react";
 import { track } from "@/lib/analytics";
 import { api } from "@/lib/api";
 import { clearDraft, draftToCreateBody, loadDraft, loadInterests } from "@/lib/draft";
-import type { Trip, User } from "@/lib/types";
+import { isProviderRole, type Trip, type User } from "@/lib/types";
 import { useSession } from "./layout/session";
 import { Button, Card, DisplayHeading } from "./ui/primitives";
 
@@ -50,7 +50,7 @@ export function AuthForm({ mode }: { mode: "signin" | "signup" }) {
       const interests = loadInterests();
       if (mode === "signup" && interests.length) await api("/me", { method: "PATCH", json: { interests } }).catch(() => {});
 
-      router.push(next ?? "/trips");
+      router.push(next ?? (isProviderRole(user.role) ? "/provider" : "/trips"));
       router.refresh();
     } catch (err) {
       setError((err as Error).message);

@@ -63,12 +63,17 @@ export default function ForProvidersPage() {
 
       <Card className="mt-12 flex flex-col items-start justify-between gap-4 bg-accent p-8 text-on-accent md:flex-row md:items-center">
         <div>
-          <p className="font-display text-[28px] font-semibold">Self-registration opens with our pilot.</p>
+          <p className="font-display text-[28px] font-semibold">Register now. We verify every provider.</p>
           <p className="opacity-90">We&apos;re onboarding the first 20–50 guides and companies region by region, starting in the hill country.</p>
         </div>
-        <ButtonLink href="/guides" variant="inverse">
-          See the Directory
-        </ButtonLink>
+        <div className="flex flex-wrap gap-3">
+          <ButtonLink href="/provider/register" variant="inverse">
+            Register as a Provider
+          </ButtonLink>
+          <ButtonLink href="/signin?next=/provider" variant="ghost" className="text-on-accent hover:bg-white/15">
+            Sign In
+          </ButtonLink>
+        </div>
       </Card>
     </div>
   );

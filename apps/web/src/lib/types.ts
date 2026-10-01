@@ -1,5 +1,7 @@
 import type { BudgetBreakdown, BudgetSettings, TransportMode } from "@sln/core";
 
+export type ProviderType = "GUIDE" | "COMPANY" | "TRANSPORT";
+
 export interface User {
   id: string;
   email: string;
@@ -8,7 +10,11 @@ export interface User {
   currency: string;
   language: string;
   interests: string[];
+  /** Present for guide, company and transport accounts. */
+  provider: { id: string; type: ProviderType; verificationStatus: "PENDING" | "APPROVED" | "REJECTED" | "RESUBMITTED" } | null;
 }
+
+export const isProviderRole = (role: User["role"]) => role === "GUIDE" || role === "COMPANY" || role === "TRANSPORT";
 
 export interface LocationCard {
   id: string;

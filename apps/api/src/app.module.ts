@@ -5,6 +5,10 @@ import { SentryGlobalFilter, SentryModule } from '@sentry/nestjs/setup';
 import { JwtModule } from '@nestjs/jwt';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { AdminController } from './admin/admin.controller';
+import { VerificationController } from './admin/verification.controller';
+import { NotificationsModule } from './notifications/notifications.module';
+import { ProviderController } from './provider/provider.controller';
+import { ProviderService } from './provider/provider.service';
 import { AuthController } from './auth/auth.controller';
 import { RequireAuthGuard } from './auth/auth.decorators';
 import { AuthService } from './auth/auth.service';
@@ -34,6 +38,7 @@ class HealthController {
     SentryModule.forRoot(),
     ConfigModule.forRoot({ isGlobal: true }),
     PrismaModule,
+    NotificationsModule,
     ThrottlerModule.forRoot([{ ttl: 60_000, limit: 300 }]),
     JwtModule.registerAsync({
       global: true,
@@ -56,9 +61,12 @@ class HealthController {
     PlacesController,
     TripsController,
     AdminController,
+    VerificationController,
+    ProviderController,
   ],
   providers: [
     AuthService,
+    ProviderService,
     TripsService,
     LegsService,
     RequireAuthGuard,

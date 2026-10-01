@@ -3,7 +3,7 @@ import { Throttle } from '@nestjs/throttler';
 import type { Response } from 'express';
 import { PrismaService } from '../prisma/prisma.service';
 import { Authenticated, CurrentUser, type SessionUser } from './auth.decorators';
-import { LoginDto, RegisterDto } from './auth.dto';
+import { LoginDto, RegisterDto, RegisterProviderDto } from './auth.dto';
 import { AuthService, publicUser } from './auth.service';
 import { SESSION_COOKIE } from './session.guard';
 
@@ -20,6 +20,14 @@ export class AuthController {
   @Throttle({ default: { limit: 5, ttl: 60_000 } })
   async register(@Body() dto: RegisterDto, @Res({ passthrough: true }) res: Response) {
     const user = await this.auth.register(dto);
+    await this.setSession(res, user);
+    return publicUser(user);
+  }
+
+  @Post('register-provider')
+  @Throttle({ default: { limit: 5, ttl: 60_000 } })
+  async registerProvider(@Body() dto: RegisterProviderDto, @Res({ passthrough: true }) res: Response) {
+    const user = await this.auth.registerProvider(dto);
     await this.setSession(res, user);
     return publicUser(user);
   }
@@ -42,7 +50,7 @@ export class AuthController {
   @Get('me')
   @Authenticated()
   async me(@CurrentUser() session: SessionUser) {
-    const user = await this.prisma.user.findUnique({ where: { id: session.id } });
+    const user = await this.prisma.user.findUnique({ where: { id: session.id }, include: { provider: true } });
     if (!user) throw new NotFoundException();
     return publicUser(user);
   }
