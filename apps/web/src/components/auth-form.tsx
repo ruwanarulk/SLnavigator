@@ -35,7 +35,9 @@ export function AuthForm({ mode }: { mode: "signin" | "signup" }) {
       setUser(user);
 
       // Carry over anything planned before signing in.
-      let next = safeNext(params.get("next"));
+      // Where they were headed wins; a planner draft only decides when there is no destination.
+      const requested = safeNext(params.get("next"));
+      let next = requested;
       const draft = loadDraft();
       const importDraft = !!draft?.stops.length;
       track(mode === "signup" ? "signed_up" : "signed_in", { imported_draft: importDraft });
@@ -43,7 +45,7 @@ export function AuthForm({ mode }: { mode: "signin" | "signup" }) {
         const trip = await api<Trip>("/trips", { method: "POST", json: draftToCreateBody(draft) });
         clearDraft();
         track("trip_created", { source: "draft_import", stops: trip.stops.length });
-        next = `/plan/${trip.id}`;
+        next = requested ?? `/plan/${trip.id}`;
       }
       const interests = loadInterests();
       if (mode === "signup" && interests.length) await api("/me", { method: "PATCH", json: { interests } }).catch(() => {});

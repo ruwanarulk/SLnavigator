@@ -5,7 +5,7 @@ import { Check } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useSession } from "@/components/layout/session";
-import { Button, Card, Chip, DisplayHeading } from "@/components/ui/primitives";
+import { Button, ButtonLink, Card, Chip, DisplayHeading } from "@/components/ui/primitives";
 import { api } from "@/lib/api";
 import type { User } from "@/lib/types";
 
@@ -78,9 +78,16 @@ export function AccountForm({ user }: { user: User }) {
           </span>
         </div>
       </Card>
-      <Button variant="secondary" className="mt-6" onClick={signOut}>
-        Sign Out
-      </Button>
+      <div className="mt-6 flex flex-wrap gap-3">
+        {user.role === "ADMIN" && (
+          <ButtonLink href="/admin" variant="secondary">
+            Admin Console
+          </ButtonLink>
+        )}
+        <Button variant="secondary" onClick={signOut}>
+          Sign Out
+        </Button>
+      </div>
     </div>
   );
 }
