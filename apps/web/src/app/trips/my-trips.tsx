@@ -7,6 +7,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { MiniLine } from "@/components/itinerary-card";
+import { timeLeft, useNow } from "@/components/marketplace/shared";
 import { useSession } from "@/components/layout/session";
 import { TripMap } from "@/components/map/trip-map";
 import { ButtonLink, Card, DisplayHeading } from "@/components/ui/primitives";
@@ -61,7 +62,7 @@ export function MyTrips({ drafts, archived }: { drafts: Trip[]; archived: Trip[]
             onClick={() => setTab(t)}
             className={clsx("h-9 rounded-full px-5 text-[14px] font-medium capitalize", tab === t ? "bg-card shadow-sm" : "text-label2")}
           >
-            {t} ({lists[t].length})
+            {t === "planning" ? "Active" : "Archived"} ({lists[t].length})
           </button>
         ))}
       </div>
@@ -102,6 +103,9 @@ function TripCard({
   const [busy, setBusy] = useState(false);
   const first = trip.stops[0]?.location.name;
   const last = trip.stops[trip.stops.length - 1]?.location.name;
+  // Where the card leads depends on how far the trip has got.
+  const href = trip.status === "POSTED" ? `/trips/${trip.id}/bids` : trip.status === "BOOKED" || trip.status === "COMPLETED" ? `/trips/${trip.id}/booking` : `/plan/${trip.id}`;
+  const draft = trip.status === "DRAFT" || trip.status === "ARCHIVED";
 
   const run = async (a: Parameters<typeof onAction>[0], t?: string) => {
     setBusy(true);
@@ -115,7 +119,7 @@ function TripCard({
   return (
     <li className={clsx("overflow-hidden rounded-card bg-card", busy && "opacity-60")}>
       {trip.stops.length > 1 && (
-        <Link href={`/plan/${trip.id}`} tabIndex={-1} aria-hidden>
+        <Link href={href} tabIndex={-1} aria-hidden>
           <TripMap className="pointer-events-none h-40" places={[]} route={trip.stops} routeOnly compact />
         </Link>
       )}
@@ -141,7 +145,7 @@ function TripCard({
               />
             </form>
           ) : (
-            <Link href={`/plan/${trip.id}`} className="min-w-0">
+            <Link href={href} className="min-w-0">
               <h2 className="truncate text-[17px] font-semibold hover:text-accent-ink">{trip.title}</h2>
             </Link>
           )}
@@ -153,6 +157,7 @@ function TripCard({
           {trip.days > 0 && ` · ${trip.days} days · ~${formatDuration(trip.totalTravelMin)} travel`}
         </p>
         {first && last && <MiniLine from={first} to={last} count={trip.stops.length} />}
+        <StatusLine trip={trip} href={href} />
         <div className="flex flex-wrap gap-1 pt-1">
           {archived ? (
             <>
@@ -163,13 +168,38 @@ function TripCard({
             <>
               <IconBtn icon={Pencil} label="Rename" onClick={() => setEditing(true)} />
               <IconBtn icon={Copy} label="Duplicate" onClick={() => run("duplicate")} />
-              <IconBtn icon={Archive} label="Archive" onClick={() => run("archive")} />
+              {draft && <IconBtn icon={Archive} label="Archive" onClick={() => run("archive")} />}
             </>
           )}
         </div>
       </div>
     </li>
   );
+}
+
+/** Open for bids, booked or completed: the state the traveller cares about most. */
+function StatusLine({ trip, href }: { trip: Trip; href: string }) {
+  const now = useNow(60_000);
+  if (trip.status === "POSTED" && trip.post) {
+    const left = timeLeft(trip.post.deadline, now);
+    return (
+      <Link href={href} className="flex items-center justify-between gap-2 rounded-tile bg-signal-t px-3 py-2 text-[13px] font-medium text-signal-ink">
+        <span>
+          Open for bids · {trip.post.bidCount} {trip.post.bidCount === 1 ? "bid" : "bids"}
+        </span>
+        <span>{left ? `closes in ${left}` : "bidding closed"}</span>
+      </Link>
+    );
+  }
+  if (trip.status === "BOOKED" || trip.status === "COMPLETED") {
+    return (
+      <Link href={href} className="flex items-center justify-between rounded-tile bg-ok-t px-3 py-2 text-[13px] font-medium text-ok">
+        <span>{trip.status === "BOOKED" ? "Booked with a verified guide" : "Trip completed"}</span>
+        <span>View →</span>
+      </Link>
+    );
+  }
+  return null;
 }
 
 function IconBtn({ icon: Icon, label, onClick, danger }: { icon: typeof Copy; label: string; onClick: () => void; danger?: boolean }) {

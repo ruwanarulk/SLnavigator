@@ -61,7 +61,7 @@ export function AccountForm({ user }: { user: User }) {
             {INTERESTS.map((i) => {
               const on = interests.includes(i.id);
               return (
-                <Chip key={i.id} active={on} onClick={() => setInterests(on ? interests.filter((x) => x !== i.id) : [...interests, i.id])}>
+                <Chip key={i.id} active={on} onClick={() => setInterests((cur) => (cur.includes(i.id) ? cur.filter((x) => x !== i.id) : [...cur, i.id]))}>
                   {on && <Check aria-hidden className="size-3.5" />}
                   {i.label}
                 </Chip>

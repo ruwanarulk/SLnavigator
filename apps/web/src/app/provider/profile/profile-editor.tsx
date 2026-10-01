@@ -40,7 +40,6 @@ const LANGUAGES = ["English", "Sinhala", "Tamil", "German", "French", "Chinese",
 const SPECIALTIES = ["Culture", "Wildlife", "Birding", "Hiking", "Tea country", "Beaches", "Surfing", "Food", "Wellness", "Photography", "Adventure", "Family", "Multi-day", "Airport transfer", "Car & driver"];
 const MAX_BYTES = 4 * 1024 * 1024;
 
-const toggle = (list: string[], v: string) => (list.includes(v) ? list.filter((x) => x !== v) : [...list, v]);
 const kb = (n: number) => (n > 1024 * 1024 ? `${(n / 1024 / 1024).toFixed(1)} MB` : `${Math.max(1, Math.round(n / 1024))} KB`);
 
 export function ProfileEditor({ initial }: { initial: ProviderMe }) {
@@ -66,6 +65,9 @@ export function ProfileEditor({ initial }: { initial: ProviderMe }) {
 
   const approved = me.state === "APPROVED";
   const set = <K extends keyof typeof form>(k: K, v: (typeof form)[K]) => setForm((f) => ({ ...f, [k]: v }));
+  // Toggles read the latest list, so quick successive clicks never overwrite each other.
+  const toggleIn = (k: "languages" | "areas" | "specialties", v: string) =>
+    setForm((f) => ({ ...f, [k]: f[k].includes(v) ? f[k].filter((x) => x !== v) : [...f[k], v] }));
 
   const body = () => ({
     ...(approved ? {} : { displayName: form.displayName.trim(), licenceNumber: form.licenceNumber.trim() || undefined, businessRegNo: form.businessRegNo.trim() || undefined }),
@@ -188,7 +190,7 @@ export function ProfileEditor({ initial }: { initial: ProviderMe }) {
         </L>
         <Group label="Languages you speak">
           {LANGUAGES.map((l) => (
-            <Chip key={l} active={form.languages.includes(l)} onClick={() => set("languages", toggle(form.languages, l))}>
+            <Chip key={l} active={form.languages.includes(l)} onClick={() => toggleIn("languages", l)}>
               {form.languages.includes(l) && <Check aria-hidden className="size-3.5" />}
               {l}
             </Chip>
@@ -196,7 +198,7 @@ export function ProfileEditor({ initial }: { initial: ProviderMe }) {
         </Group>
         <Group label="Regions you cover">
           {REGIONS.map((r) => (
-            <Chip key={r.id} active={form.areas.includes(r.id)} onClick={() => set("areas", toggle(form.areas, r.id))}>
+            <Chip key={r.id} active={form.areas.includes(r.id)} onClick={() => toggleIn("areas", r.id)}>
               {form.areas.includes(r.id) && <Check aria-hidden className="size-3.5" />}
               {r.label}
             </Chip>
@@ -204,7 +206,7 @@ export function ProfileEditor({ initial }: { initial: ProviderMe }) {
         </Group>
         <Group label="Specialties">
           {SPECIALTIES.map((s) => (
-            <Chip key={s} active={form.specialties.includes(s)} onClick={() => set("specialties", toggle(form.specialties, s))}>
+            <Chip key={s} active={form.specialties.includes(s)} onClick={() => toggleIn("specialties", s)}>
               {form.specialties.includes(s) && <Check aria-hidden className="size-3.5" />}
               {s}
             </Chip>

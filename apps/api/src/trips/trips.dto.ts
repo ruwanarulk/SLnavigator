@@ -14,7 +14,7 @@ import {
   MinLength,
   ValidateNested,
 } from 'class-validator';
-import { TransportMode, TripStatus } from '@prisma/client';
+import { TransportMode } from '@prisma/client';
 import { BUDGET_LEVELS, STAY_TIERS } from '@sln/core';
 
 export const MAX_STOPS = 30;
@@ -47,7 +47,8 @@ export class UpdateTripDto {
   /** ISO date, or null to clear. */
   @IsOptional() @IsDateString() startDate?: string | null;
   @IsOptional() @IsInt() @Min(1) @Max(20) travelers?: number;
-  @IsOptional() @IsEnum(TripStatus) status?: TripStatus;
+  /** Only archiving and restoring are allowed here; posting and booking have their own endpoints. */
+  @IsOptional() @IsIn(['DRAFT', 'ARCHIVED']) status?: 'DRAFT' | 'ARCHIVED';
   @IsOptional() @ValidateNested() @Type(() => BudgetSettingsInput) budget?: BudgetSettingsInput;
 }
 
@@ -57,5 +58,5 @@ export class SetStopsDto {
 }
 
 export class ListTripsQuery {
-  @IsOptional() @IsEnum(TripStatus) status?: TripStatus;
+  @IsOptional() @IsIn(['DRAFT', 'ARCHIVED']) status?: 'DRAFT' | 'ARCHIVED';
 }

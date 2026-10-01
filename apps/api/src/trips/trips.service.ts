@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import type { Prisma, TransportMode } from '@prisma/client';
 import { DEFAULT_BUDGET, estimateBudget, tripDays, type BudgetSettings } from '@sln/core';
 import { LOCATION_CARD } from '../common/selects';
@@ -9,7 +9,11 @@ import type { CreateTripDto, StopInput, UpdateTripDto } from './trips.dto';
 const TRIP_INCLUDE = {
   stops: { orderBy: { position: 'asc' }, include: { location: { select: LOCATION_CARD } } },
   itinerary: { select: { slug: true, title: true } },
+  post: { select: { id: true, status: true, deadline: true, _count: { select: { bids: { where: { status: 'PENDING' } } } } } },
 } satisfies Prisma.TripInclude;
+
+/** Statuses that appear in the main My Trips list (archived trips have their own tab). */
+const ACTIVE_STATUSES = ['DRAFT', 'POSTED', 'BOOKED', 'COMPLETED'] as const;
 
 type TripWithStops = Prisma.TripGetPayload<{ include: typeof TRIP_INCLUDE }>;
 
@@ -39,6 +43,7 @@ export function toTripDto(t: TripWithStops) {
     budgetSettings: settings,
     budget,
     itinerary: t.itinerary,
+    post: t.post ? { id: t.post.id, status: t.post.status, deadline: t.post.deadline, bidCount: t.post._count.bids } : null,
     totalTravelMin: t.stops.reduce((sum, s, i) => sum + (i < t.stops.length - 1 ? (s.legDurationMin ?? 0) : 0), 0),
     stops: t.stops.map((s, i) => ({
       id: s.id,
@@ -65,7 +70,7 @@ export class TripsService {
 
   async list(userId: string, status?: 'DRAFT' | 'ARCHIVED') {
     const trips = await this.prisma.trip.findMany({
-      where: { userId, status: status ?? 'DRAFT' },
+      where: { userId, status: status ?? { in: [...ACTIVE_STATUSES] } },
       include: TRIP_INCLUDE,
       orderBy: { updatedAt: 'desc' },
     });
@@ -110,6 +115,13 @@ export class TripsService {
 
   async update(userId: string, id: string, dto: UpdateTripDto) {
     const trip = await this.load(userId, id);
+    // Once posted or booked, a trip is a commitment between people: only the name can change.
+    if (!['DRAFT', 'ARCHIVED'].includes(trip.status)) {
+      const { title, ...others } = dto;
+      if (Object.values(others).some((v) => v !== undefined)) throw new ConflictException('This trip is posted or booked, so its plan can no longer be edited');
+      if (title !== undefined) await this.prisma.trip.update({ where: { id }, data: { title } });
+      return this.get(userId, id);
+    }
     await this.prisma.trip.update({
       where: { id },
       data: {
@@ -124,7 +136,8 @@ export class TripsService {
   }
 
   async setStops(userId: string, id: string, stops: StopInput[]) {
-    await this.load(userId, id);
+    const trip = await this.load(userId, id);
+    if (trip.status !== 'DRAFT') throw new ConflictException('This trip is posted or booked, so its stops can no longer be edited');
     await this.writeStops(id, stops);
     await this.prisma.trip.update({ where: { id }, data: { updatedAt: new Date() } });
     return this.get(userId, id);
@@ -141,7 +154,8 @@ export class TripsService {
   }
 
   async remove(userId: string, id: string) {
-    await this.load(userId, id);
+    const trip = await this.load(userId, id);
+    if (!['DRAFT', 'ARCHIVED'].includes(trip.status)) throw new ConflictException('A posted or booked trip cannot be deleted');
     await this.prisma.trip.delete({ where: { id } });
   }
 

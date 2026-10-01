@@ -65,10 +65,21 @@ export interface TripStop {
   location: LocationCard;
 }
 
+export type TripStatus = "DRAFT" | "ARCHIVED" | "POSTED" | "BOOKED" | "COMPLETED";
+
+export interface TripPostSummary {
+  id: string;
+  status: "OPEN" | "CLOSED" | "WITHDRAWN";
+  deadline: string;
+  bidCount: number;
+}
+
 export interface Trip {
   id: string;
   title: string;
-  status: "DRAFT" | "ARCHIVED";
+  status: TripStatus;
+  /** Set once the trip has been posted for bids. */
+  post: TripPostSummary | null;
   startDate: string | null;
   travelers: number;
   days: number;

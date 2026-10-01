@@ -18,6 +18,8 @@ import { ItinerariesController } from './itineraries/itineraries.controller';
 import { LocationsController } from './locations/locations.controller';
 import { MeController } from './me/me.controller';
 import { PlacesController } from './places/places.controller';
+import { ProviderRequestsController, TripPostController } from './posts/posts.controller';
+import { PostsService } from './posts/posts.service';
 import { PlannerController } from './planner/planner.controller';
 import { PrismaModule } from './prisma/prisma.service';
 import { ProvidersController } from './providers/providers.controller';
@@ -63,10 +65,13 @@ class HealthController {
     AdminController,
     VerificationController,
     ProviderController,
+    TripPostController,
+    ProviderRequestsController,
   ],
   providers: [
     AuthService,
     ProviderService,
+    PostsService,
     TripsService,
     LegsService,
     RequireAuthGuard,

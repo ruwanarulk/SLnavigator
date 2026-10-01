@@ -2,7 +2,7 @@
 
 import { CURRENCIES } from "@sln/core";
 import clsx from "clsx";
-import { Compass, Globe, Map, Route, UserRound } from "lucide-react";
+import { Bell, Compass, Globe, Inbox, Map, Route, Send, UserRound } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { api } from "@/lib/api";
@@ -104,15 +104,24 @@ const TABS = [
   { href: "/account", label: "Profile", icon: UserRound },
 ];
 
-/** Mobile bottom navigation, per the Product Plan §13. */
+const PROVIDER_TABS = [
+  { href: "/provider/requests", label: "Requests", icon: Inbox },
+  { href: "/provider/bids", label: "Bids", icon: Send },
+  { href: "/notifications", label: "Alerts", icon: Bell },
+  { href: "/provider/profile", label: "Profile", icon: UserRound },
+];
+
+/** Mobile bottom navigation, per the Product Plan §13. Providers get their own tabs. */
 export function BottomNav() {
   const path = usePathname();
+  const { user } = useSession();
+  const tabs = user && isProviderRole(user.role) ? PROVIDER_TABS : TABS;
   return (
     <nav
       aria-label="App"
       className="glass fixed inset-x-0 bottom-0 z-40 grid grid-cols-4 pb-[env(safe-area-inset-bottom)] md:hidden"
     >
-      {TABS.map(({ href, label, icon: Icon }) => {
+      {tabs.map(({ href, label, icon: Icon }) => {
         const active = path === href || path.startsWith(`${href}/`);
         return (
           <Link

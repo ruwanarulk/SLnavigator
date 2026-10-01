@@ -15,6 +15,7 @@ export type AnalyticsEvent =
   | { name: "budget_adjusted"; props: { field: string } }
   | { name: "itinerary_customized"; props: { slug: string } }
   | { name: "fork_opened"; props: { path: "book_myself" | "guide_bids" } }
+  | { name: "trip_posted"; props: { stops: number; days: number; window_hours: number; need: string } }
   | { name: "signed_up"; props: { imported_draft: boolean } }
   | { name: "signed_in"; props: { imported_draft: boolean } };
 

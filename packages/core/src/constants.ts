@@ -52,3 +52,24 @@ export type BudgetLevel = (typeof BUDGET_LEVELS)[number];
 
 export const CURRENCIES = ['USD', 'EUR', 'GBP', 'AUD', 'INR', 'CNY', 'RUB', 'LKR'] as const;
 export type Currency = (typeof CURRENCIES)[number];
+
+/** What a guide's bid price covers. */
+export const BID_INCLUSIONS = [
+  { id: 'CAR_DRIVER', label: 'Car & driver' },
+  { id: 'GUIDE', label: 'Guide, all days' },
+  { id: 'ENTRY_FEES', label: 'Entry fees' },
+  { id: 'ACCOMMODATION', label: 'Accommodation' },
+  { id: 'MEALS', label: 'Meals' },
+  { id: 'AIRPORT_PICKUP', label: 'Airport pickup' },
+] as const;
+export type BidInclusion = (typeof BID_INCLUSIONS)[number]['id'];
+
+export const SERVICE_NEEDS = [
+  { id: 'GUIDE_AND_TRANSPORT', label: 'Guide and transport' },
+  { id: 'GUIDE_ONLY', label: 'Guide only' },
+  { id: 'TRANSPORT_ONLY', label: 'Transport only' },
+] as const;
+export type ServiceNeedId = (typeof SERVICE_NEEDS)[number]['id'];
+
+/** Bidding windows a traveller can choose, in hours. */
+export const BID_WINDOWS = [24, 48, 72] as const;

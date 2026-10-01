@@ -16,6 +16,7 @@ import { Dialog } from "../ui/dialog";
 import { Button, ButtonLink, Chip, Rating } from "../ui/primitives";
 import { SceneArt } from "../ui/scene-art";
 import { PlaceSearch } from "./place-search";
+import { PostTripForm } from "./post-trip-form";
 import { TheLine } from "./the-line";
 import { TransportOptions } from "./transport-options";
 import { usePlanner, type SaveState } from "./use-planner";
@@ -32,6 +33,11 @@ export function Planner({ trip, places }: { trip: Trip | null; places: LocationC
   const [fetched, setFetched] = useState<{ key: string; list: Suggestion[] }>({ key: "", list: [] });
   const [dialog, setDialog] = useState<"bids" | "self" | null>(null);
   const [saving, setSaving] = useState(false);
+  // Once posted for bids or booked, the plan is frozen so everyone is bidding on the same trip.
+  const locked = !!trip && trip.status !== "DRAFT";
+  const statusHref = trip?.status === "POSTED" ? `/trips/${trip.id}/bids` : `/trips/${trip?.id}/booking`;
+  const statusLabel =
+    trip?.status === "POSTED" ? `View Bids${trip.post?.bidCount ? ` (${trip.post.bidCount})` : ""}` : trip?.status === "BOOKED" ? "View Booking" : "View Trip Details";
   const openFork = (path: "self" | "bids") => {
     setDialog(path);
     track("fork_opened", { path: path === "self" ? "book_myself" : "guide_bids" });
@@ -109,6 +115,7 @@ export function Planner({ trip, places }: { trip: Trip | null; places: LocationC
           <input
             type="date"
             value={state.startDate ?? ""}
+            disabled={locked}
             onChange={(e) => actions.setMeta({ startDate: e.target.value || null })}
             className="rounded bg-transparent text-[13px] text-label2 outline-none hover:bg-fill/60"
           />
@@ -117,7 +124,7 @@ export function Planner({ trip, places }: { trip: Trip | null; places: LocationC
           <UsersRound aria-hidden className="size-3.5" />
           <button
             aria-label="Fewer travellers"
-            disabled={state.travelers <= 1}
+            disabled={locked || state.travelers <= 1}
             onClick={() => actions.setMeta({ travelers: state.travelers - 1 })}
             className="grid size-6 place-items-center rounded-full hover:bg-fill disabled:opacity-40"
           >
@@ -128,7 +135,7 @@ export function Planner({ trip, places }: { trip: Trip | null; places: LocationC
           </span>
           <button
             aria-label="More travellers"
-            disabled={state.travelers >= 20}
+            disabled={locked || state.travelers >= 20}
             onClick={() => actions.setMeta({ travelers: state.travelers + 1 })}
             className="grid size-6 place-items-center rounded-full hover:bg-fill disabled:opacity-40"
           >
@@ -148,11 +155,12 @@ export function Planner({ trip, places }: { trip: Trip | null; places: LocationC
     <div className="space-y-4">
       <TheLine
         stops={state.stops}
-        actions={actions}
+        actions={locked ? undefined : actions}
+        readOnly={locked}
         selectedId={selected?.id}
         onSelect={(i) => setSelected(state.stops[i].location)}
       />
-      {topSuggestion && (
+      {!locked && topSuggestion && (
         <div className="flex items-center justify-between gap-3 rounded-tile bg-signal-t px-4 py-3">
           <div className="text-[13px]">
             <p className="font-semibold text-signal-ink">Near {topSuggestion.nearStopName}</p>
@@ -165,7 +173,7 @@ export function Planner({ trip, places }: { trip: Trip | null; places: LocationC
           </button>
         </div>
       )}
-      {suggestions.length > 1 && (
+      {!locked && suggestions.length > 1 && (
         <details className="text-[13px]">
           <summary className="cursor-pointer font-medium text-accent-ink">
             <Sparkles aria-hidden className="mr-1 inline size-3.5" />
@@ -185,14 +193,16 @@ export function Planner({ trip, places }: { trip: Trip | null; places: LocationC
           </ul>
         </details>
       )}
-      <PlaceSearch
-        places={places}
-        onPick={(p, via) => {
-          actions.addStop(p);
-          track("stop_added", { source: via === "google" ? "google_search" : "search" });
-        }}
-        placeholder="Add a stop"
-      />
+      {!locked && (
+        <PlaceSearch
+          places={places}
+          onPick={(p, via) => {
+            actions.addStop(p);
+            track("stop_added", { source: via === "google" ? "google_search" : "search" });
+          }}
+          placeholder="Add a stop"
+        />
+      )}
     </div>
   );
 
@@ -221,12 +231,20 @@ export function Planner({ trip, places }: { trip: Trip | null; places: LocationC
           <div className="pointer-events-auto flex flex-wrap items-center gap-2">
             <PlaceSearch places={places} onPick={(p) => setSelected(p)} placeholder="Search places to add" className="w-full max-w-xs flex-1" />
             <div className="ml-auto hidden gap-2 lg:flex">
-              <Button variant="inverse" onClick={() => openFork("self")} disabled={state.stops.length < 2} className="shadow-float">
-                Book It Myself
-              </Button>
-              <Button onClick={() => openFork("bids")} disabled={state.stops.length < 1} className="shadow-float">
-                Get Guide Bids
-              </Button>
+              {locked ? (
+                <ButtonLink href={statusHref} className="shadow-float">
+                  {statusLabel}
+                </ButtonLink>
+              ) : (
+                <>
+                  <Button variant="inverse" onClick={() => openFork("self")} disabled={state.stops.length < 2} className="shadow-float">
+                    Book It Myself
+                  </Button>
+                  <Button onClick={() => openFork("bids")} disabled={state.stops.length < 1} className="shadow-float">
+                    Get Guide Bids
+                  </Button>
+                </>
+              )}
             </div>
           </div>
           <div className="pointer-events-auto flex gap-2 overflow-x-auto pb-1">
@@ -244,7 +262,7 @@ export function Planner({ trip, places }: { trip: Trip | null; places: LocationC
         {selected && (
           <PreviewCard
             place={selected}
-            inRoute={inRoute >= 0}
+            inRoute={inRoute >= 0 || locked}
             monsoon={seasonFor(selected.region as Region, month) === "monsoon"}
             onAdd={() => {
               actions.addStop(selected);
@@ -260,33 +278,28 @@ export function Planner({ trip, places }: { trip: Trip | null; places: LocationC
         <div aria-hidden className="mx-auto mb-3 h-1.5 w-10 rounded-full bg-sep" />
         {header}
         {!trip && <LocalBanner onSave={saveToAccount} saving={saving} signedIn={!!user} />}
-        <div className="my-4 grid grid-cols-2 gap-2">
-          <Button variant="secondary" size="sm" onClick={() => openFork("self")} disabled={state.stops.length < 2}>
-            Book It Myself
-          </Button>
-          <Button size="sm" onClick={() => openFork("bids")} disabled={!state.stops.length}>
-            Get Guide Bids
-          </Button>
-        </div>
+        {locked ? (
+          <ButtonLink href={statusHref} size="sm" className="my-4 w-full">
+            {statusLabel}
+          </ButtonLink>
+        ) : (
+          <div className="my-4 grid grid-cols-2 gap-2">
+            <Button variant="secondary" size="sm" onClick={() => openFork("self")} disabled={state.stops.length < 2}>
+              Book It Myself
+            </Button>
+            <Button size="sm" onClick={() => openFork("bids")} disabled={!state.stops.length}>
+              Get Guide Bids
+            </Button>
+          </div>
+        )}
         {route}
       </div>
 
       <Dialog open={dialog === "self"} onClose={() => setDialog(null)} title="Book it myself" wide>
         <TransportOptions stops={state.stops} travelers={state.travelers} onMode={actions.setMode} />
       </Dialog>
-      <Dialog open={dialog === "bids"} onClose={() => setDialog(null)} title="Get guide bids">
-        <div className="space-y-4 text-[14px]">
-          <p>
-            Soon you&apos;ll post this plan and verified guides and companies who cover your route will send offers within 48–72 hours. You compare, chat, and pay only
-            when you accept. Payment is held until your trip ends.
-          </p>
-          <p className="rounded-tile bg-fill p-3 text-label2">
-            Bidding opens with our pilot in the hill country. Until then, browse the verified guides in the directory.
-          </p>
-          <ButtonLink href="/guides" className="w-full">
-            Browse Guides
-          </ButtonLink>
-        </div>
+      <Dialog open={dialog === "bids"} onClose={() => setDialog(null)} title="Get guide bids" wide>
+        <PostTripForm trip={trip} startDate={state.startDate} travelers={state.travelers} stops={state.stops.length} days={days} onNeedAccount={saveToAccount} />
       </Dialog>
     </div>
   );

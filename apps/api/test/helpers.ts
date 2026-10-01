@@ -66,3 +66,22 @@ export async function submitProvider(app: INestApplication, cookie: string, over
   }
   return request(app.getHttpServer()).post('/api/provider/me/submit').set('Cookie', cookie);
 }
+
+/** Marks a provider verified directly (the verification flow has its own test). */
+export async function approveProvider(prisma: PrismaService, email: string, data: { areas?: string[]; languages?: string[]; specialties?: string[]; displayName?: string } = {}) {
+  const user = await prisma.user.findUniqueOrThrow({ where: { email }, include: { provider: true } });
+  return prisma.providerProfile.update({
+    where: { id: user.provider!.id },
+    data: {
+      verificationStatus: 'APPROVED',
+      submittedAt: new Date(),
+      bio: 'A verified provider used in automated tests.',
+      areas: data.areas ?? ['hill'],
+      languages: data.languages ?? ['English'],
+      specialties: data.specialties ?? [],
+      ...(data.displayName ? { displayName: data.displayName } : {}),
+    },
+  });
+}
+
+export const isoDate = (daysFromNow: number) => new Date(Date.now() + daysFromNow * 86_400_000).toISOString().slice(0, 10);

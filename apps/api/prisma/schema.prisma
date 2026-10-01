@@ -25,6 +25,31 @@ enum Role {
 enum TripStatus {
   DRAFT
   ARCHIVED
+  /// Posted for bids; the plan is frozen.
+  POSTED
+  /// A bid was accepted.
+  BOOKED
+  COMPLETED
+}
+
+enum PostStatus {
+  OPEN
+  /// A bid was accepted.
+  CLOSED
+  WITHDRAWN
+}
+
+enum BidStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  WITHDRAWN
+}
+
+enum ServiceNeed {
+  GUIDE_AND_TRANSPORT
+  GUIDE_ONLY
+  TRANSPORT_ONLY
 }
 
 enum TransportMode {
@@ -141,6 +166,7 @@ model Trip {
   user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   itinerary Itinerary? @relation(fields: [itineraryId], references: [id], onDelete: SetNull)
   stops     TripStop[]
+  post      TripPost?
 
   @@index([userId, status])
 }
@@ -226,6 +252,7 @@ model ProviderProfile {
   videoCallAt        DateTime?
   user               User?                  @relation(fields: [userId], references: [id], onDelete: SetNull)
   documents          VerificationDocument[]
+  bids               Bid[]
   createdAt          DateTime               @default(now())
   updatedAt          DateTime               @updatedAt
 
@@ -285,4 +312,56 @@ model Notification {
 
   @@index([userId, readAt])
   @@index([userId, createdAt])
+}
+
+/// A trip put to the marketplace: the traveller's request that guides bid on.
+model TripPost {
+  id           String      @id @default(cuid())
+  tripId       String      @unique
+  userId       String
+  startDate    DateTime    @db.Date
+  endDate      DateTime    @db.Date
+  adults       Int
+  children     Int         @default(0)
+  budgetMinUsd Int
+  budgetMaxUsd Int
+  need         ServiceNeed @default(GUIDE_AND_TRANSPORT)
+  /// Interest ids (culture, birding, ...) used to match providers.
+  interests    String[]
+  /// Languages the traveller would like the guide to speak.
+  languages    String[]
+  notes        String      @default("")
+  /// Bids are accepted until this time; the traveller may still accept later.
+  deadline     DateTime
+  status       PostStatus  @default(OPEN)
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  trip Trip  @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  bids Bid[]
+
+  @@index([status, deadline])
+}
+
+model Bid {
+  id                    String    @id @default(cuid())
+  postId                String
+  providerId            String
+  /// Total price for the whole group, whole USD.
+  priceUsd              Int
+  /// CAR_DRIVER, GUIDE, ENTRY_FEES, ACCOMMODATION, MEALS, ...
+  inclusions            String[]
+  pitch                 String
+  availabilityConfirmed Boolean   @default(true)
+  status                BidStatus @default(PENDING)
+  /// The traveller's shortlist.
+  shortlisted           Boolean   @default(false)
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  post     TripPost        @relation(fields: [postId], references: [id], onDelete: Cascade)
+  provider ProviderProfile @relation(fields: [providerId], references: [id], onDelete: Cascade)
+
+  @@unique([postId, providerId])
+  @@index([providerId, status])
 }
