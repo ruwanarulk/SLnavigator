@@ -6,6 +6,8 @@ import { JwtModule } from '@nestjs/jwt';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { AdminController } from './admin/admin.controller';
 import { VerificationController } from './admin/verification.controller';
+import { MessagingController } from './messaging/messaging.controller';
+import { MessagingService } from './messaging/messaging.service';
 import { NotificationsModule } from './notifications/notifications.module';
 import { ProviderController } from './provider/provider.controller';
 import { ProviderService } from './provider/provider.service';
@@ -71,12 +73,14 @@ class HealthController {
     ProviderRequestsController,
     TripChoiceController,
     BookingsController,
+    MessagingController,
   ],
   providers: [
     AuthService,
     ProviderService,
     PostsService,
     BookingsService,
+    MessagingService,
     TripsService,
     LegsService,
     RequireAuthGuard,

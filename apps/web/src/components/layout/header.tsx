@@ -2,7 +2,7 @@
 
 import { CURRENCIES } from "@sln/core";
 import clsx from "clsx";
-import { CalendarCheck, Compass, Globe, Inbox, Map, Route, Send, UserRound } from "lucide-react";
+import { CalendarCheck, Compass, Globe, Inbox, Map, MessageCircle, Route, Send, UserRound } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { api } from "@/lib/api";
@@ -108,6 +108,7 @@ const PROVIDER_TABS = [
   { href: "/provider/requests", label: "Requests", icon: Inbox },
   { href: "/provider/bids", label: "Bids", icon: Send },
   { href: "/provider/bookings", label: "Bookings", icon: CalendarCheck },
+  { href: "/inbox", label: "Messages", icon: MessageCircle },
   { href: "/provider/profile", label: "Profile", icon: UserRound },
 ];
 
@@ -119,7 +120,8 @@ export function BottomNav() {
   return (
     <nav
       aria-label="App"
-      className="glass fixed inset-x-0 bottom-0 z-40 grid grid-cols-4 pb-[env(safe-area-inset-bottom)] md:hidden"
+      style={{ gridTemplateColumns: `repeat(${tabs.length}, minmax(0, 1fr))` }}
+      className="glass fixed inset-x-0 bottom-0 z-40 grid pb-[env(safe-area-inset-bottom)] md:hidden"
     >
       {tabs.map(({ href, label, icon: Icon }) => {
         const active = path === href || path.startsWith(`${href}/`);

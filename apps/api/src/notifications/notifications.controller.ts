@@ -25,8 +25,21 @@ export class NotificationsController {
   /** Cheap badge counts for the header; polled every 30s. */
   @Get('summary')
   async summary(@CurrentUser() user: SessionUser) {
-    const unread = await this.prisma.notification.count({ where: { userId: user.id, readAt: null } });
-    return { unread };
+    const [unread, rows] = await Promise.all([
+      this.prisma.notification.count({ where: { userId: user.id, readAt: null } }),
+      // Messages from the other person that this user has not opened yet, across all threads.
+      this.prisma.$queryRaw<{ n: number }[]>`
+        SELECT count(*)::int AS n
+        FROM "Message" m
+        JOIN "Conversation" c ON c.id = m."conversationId"
+        JOIN "ProviderProfile" p ON p.id = c."providerId"
+        WHERE m."senderId" <> ${user.id}
+          AND (
+            (c."travellerId" = ${user.id} AND (c."travellerReadAt" IS NULL OR m."createdAt" > c."travellerReadAt"))
+            OR (p."userId" = ${user.id} AND (c."providerReadAt" IS NULL OR m."createdAt" > c."providerReadAt"))
+          )`,
+    ]);
+    return { unread, messages: rows[0]?.n ?? 0 };
   }
 
   @Post('read')

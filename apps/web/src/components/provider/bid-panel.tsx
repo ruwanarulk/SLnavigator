@@ -6,6 +6,7 @@ import { CalendarCheck, Clock, UsersRound } from "lucide-react";
 import { useState } from "react";
 import { api } from "@/lib/api";
 import { fmtRange, needLabel, timeLeft, useNow } from "../marketplace/shared";
+import { StartConversation } from "../messaging/start-conversation";
 import { Button, Card, Pill } from "../ui/primitives";
 
 export interface RequestItem {
@@ -162,6 +163,7 @@ export function BidPanel({ request, onChanged }: { request: RequestItem; onChang
             <Button onClick={submit} disabled={busy}>
               {mine ? "Update Bid" : "Submit Bid"}
             </Button>
+            <StartConversation tripId={request.tripId} label="Ask a Question" />
             {mine && (
               <Button variant="ghost" onClick={withdraw} disabled={busy}>
                 Withdraw Bid

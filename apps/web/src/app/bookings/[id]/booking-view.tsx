@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useSession } from "@/components/layout/session";
 import { fmtRange, initials, InclusionChips, ProgressSteps } from "@/components/marketplace/shared";
+import { StartConversation } from "@/components/messaging/start-conversation";
 import { Dialog } from "@/components/ui/dialog";
 import { Button, ButtonLink, Card, DisplayHeading, Pill, Rating } from "@/components/ui/primitives";
 import { api } from "@/lib/api";
@@ -206,6 +207,7 @@ export function BookingView({ initial }: { initial: BookingData }) {
             )}
           </Card>
 
+          <StartConversation tripId={b.tripId} providerId={isTraveller ? b.provider.id : undefined} label={`Message ${other.split(" ")[0]}`} variant="primary" />
           {b.cancellable && (
             <Button variant="ghost" size="sm" onClick={() => setCancelling(true)}>
               Cancel this booking

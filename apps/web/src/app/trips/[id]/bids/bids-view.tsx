@@ -8,6 +8,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useSession } from "@/components/layout/session";
 import { fmtRange, initials, InclusionChips, needLabel, ProgressSteps, responseLabel, timeLeft, useNow } from "@/components/marketplace/shared";
 import { BID_INCLUSIONS } from "@sln/core";
+import { StartConversation } from "@/components/messaging/start-conversation";
 import { Dialog } from "@/components/ui/dialog";
 import { Button, Card, DisplayHeading, Pill, Rating, VerifiedBadge } from "@/components/ui/primitives";
 import { api } from "@/lib/api";
@@ -227,7 +228,7 @@ export function BidsView({ trip, initial }: { trip: Trip; initial: OwnerPost }) 
         <ul className="mt-3 space-y-3">
           {bids.map((b) => (
             <li key={b.id}>
-              <BidCard bid={b} people={people} price={money(b.priceUsd)} perPerson={money(Math.round(b.priceUsd / people))} canAccept={post.status === "OPEN"} onShortlist={() => toggleShortlist(b)} onAccept={() => setAccepting(b)} />
+              <BidCard bid={b} tripId={trip.id} people={people} price={money(b.priceUsd)} perPerson={money(Math.round(b.priceUsd / people))} canAccept={post.status === "OPEN"} onShortlist={() => toggleShortlist(b)} onAccept={() => setAccepting(b)} />
             </li>
           ))}
         </ul>
@@ -366,6 +367,7 @@ function CompareTable({
 
 function BidCard({
   bid,
+  tripId,
   people,
   price,
   perPerson,
@@ -374,6 +376,7 @@ function BidCard({
   onAccept,
 }: {
   bid: OwnerBid;
+  tripId: string;
   people: number;
   price: string;
   perPerson: string;
@@ -431,6 +434,7 @@ function BidCard({
           >
             <Star aria-hidden className={clsx("size-4", bid.shortlisted && "fill-signal text-signal")} /> {bid.shortlisted ? "Shortlisted" : "Shortlist"}
           </button>
+          <StartConversation tripId={tripId} providerId={p.id} />
           <Button onClick={onAccept} className="ml-auto">
             Accept Offer
           </Button>
