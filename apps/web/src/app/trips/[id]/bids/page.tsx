@@ -14,6 +14,7 @@ export default async function BidsPage(props: PageProps<"/trips/[id]/bids">) {
   try {
     trip = await serverApi<Trip>(`/trips/${encodeURIComponent(id)}`);
     if (trip.status === "DRAFT" || trip.status === "ARCHIVED") redirect(`/plan/${id}`);
+    if (trip.status === "BOOKED" || trip.status === "COMPLETED") redirect(`/trips/${id}/booking`);
     post = await serverApi<OwnerPost>(`/trips/${encodeURIComponent(id)}/post`);
   } catch (e) {
     if (e instanceof ApiError && e.status === 401) redirect(`/signin?next=/trips/${id}/bids`);

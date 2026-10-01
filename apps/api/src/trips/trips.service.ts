@@ -69,6 +69,8 @@ export class TripsService {
   ) {}
 
   async list(userId: string, status?: 'DRAFT' | 'ARCHIVED') {
+    // A booked trip whose last day has passed is now a completed trip.
+    await this.prisma.trip.updateMany({ where: { userId, status: 'BOOKED', post: { is: { endDate: { lt: new Date(Date.now() - 86_400_000) } } } }, data: { status: 'COMPLETED' } });
     const trips = await this.prisma.trip.findMany({
       where: { userId, status: status ?? { in: [...ACTIVE_STATUSES] } },
       include: TRIP_INCLUDE,

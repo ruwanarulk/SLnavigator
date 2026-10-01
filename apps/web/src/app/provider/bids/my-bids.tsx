@@ -16,6 +16,7 @@ export interface MyBid {
   endDate: string;
   deadline: string;
   postStatus: "OPEN" | "CLOSED" | "WITHDRAWN";
+  bookingId: string | null;
 }
 
 function status(b: MyBid, now: number) {
@@ -60,8 +61,8 @@ export function MyBids({ bids }: { bids: MyBid[] }) {
             );
             return (
               <li key={b.id}>
-                {open ? (
-                  <Link href={`/provider/requests/${b.postId}`} className="block rounded-card bg-card p-4 transition hover:shadow-float">
+                {open || b.bookingId ? (
+                  <Link href={b.bookingId ? `/bookings/${b.bookingId}` : `/provider/requests/${b.postId}`} className="block rounded-card bg-card p-4 transition hover:shadow-float">
                     {body}
                   </Link>
                 ) : (

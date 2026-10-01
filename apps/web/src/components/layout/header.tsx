@@ -2,7 +2,7 @@
 
 import { CURRENCIES } from "@sln/core";
 import clsx from "clsx";
-import { Bell, Compass, Globe, Inbox, Map, Route, Send, UserRound } from "lucide-react";
+import { CalendarCheck, Compass, Globe, Inbox, Map, Route, Send, UserRound } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { api } from "@/lib/api";
@@ -107,7 +107,7 @@ const TABS = [
 const PROVIDER_TABS = [
   { href: "/provider/requests", label: "Requests", icon: Inbox },
   { href: "/provider/bids", label: "Bids", icon: Send },
-  { href: "/notifications", label: "Alerts", icon: Bell },
+  { href: "/provider/bookings", label: "Bookings", icon: CalendarCheck },
   { href: "/provider/profile", label: "Profile", icon: UserRound },
 ];
 

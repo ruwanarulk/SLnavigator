@@ -286,7 +286,7 @@ export class PostsService {
     const provider = await this.approvedProvider(userId);
     const bids = await this.prisma.bid.findMany({
       where: { providerId: provider.id },
-      include: { post: { include: { trip: { select: { title: true } } } } },
+      include: { post: { include: { trip: { select: { title: true } } } }, booking: { select: { id: true, status: true } } },
       orderBy: { updatedAt: 'desc' },
       take: 100,
     });
@@ -298,6 +298,7 @@ export class PostsService {
       deadline: b.post.deadline,
       postStatus: b.post.status,
       tripId: b.post.tripId,
+      bookingId: b.booking && b.booking.status === 'CONFIRMED' ? b.booking.id : null,
     }));
   }
 

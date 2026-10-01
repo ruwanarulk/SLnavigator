@@ -85,3 +85,14 @@ export async function approveProvider(prisma: PrismaService, email: string, data
 }
 
 export const isoDate = (daysFromNow: number) => new Date(Date.now() + daysFromNow * 86_400_000).toISOString().slice(0, 10);
+
+/** Removes everything a spec created for these users, in an order the foreign keys allow. */
+export async function cleanupUsers(prisma: PrismaService, emails: string[]) {
+  const users = await prisma.user.findMany({ where: { email: { in: emails } }, select: { id: true, provider: { select: { id: true } } } });
+  const userIds = users.map((u) => u.id);
+  const providerIds = users.flatMap((u) => (u.provider ? [u.provider.id] : []));
+  await prisma.booking.deleteMany({ where: { OR: [{ travellerId: { in: userIds } }, { providerId: { in: providerIds } }] } });
+  await prisma.auditLog.deleteMany({ where: { actorId: { in: userIds } } });
+  await prisma.providerProfile.deleteMany({ where: { id: { in: providerIds } } });
+  await prisma.user.deleteMany({ where: { id: { in: userIds } } });
+}

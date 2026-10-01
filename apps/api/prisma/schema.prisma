@@ -46,6 +46,11 @@ enum BidStatus {
   WITHDRAWN
 }
 
+enum BookingStatus {
+  CONFIRMED
+  CANCELLED
+}
+
 enum ServiceNeed {
   GUIDE_AND_TRANSPORT
   GUIDE_ONLY
@@ -104,6 +109,7 @@ model User {
   auditLogs     AuditLog[]
   provider      ProviderProfile?
   notifications Notification[]
+  bookings      Booking[]
 }
 
 model Location {
@@ -167,6 +173,8 @@ model Trip {
   itinerary Itinerary? @relation(fields: [itineraryId], references: [id], onDelete: SetNull)
   stops     TripStop[]
   post      TripPost?
+  /// Past bookings stay on record: a cancelled trip can be posted and booked again.
+  bookings  Booking[]
 
   @@index([userId, status])
 }
@@ -253,6 +261,7 @@ model ProviderProfile {
   user               User?                  @relation(fields: [userId], references: [id], onDelete: SetNull)
   documents          VerificationDocument[]
   bids               Bid[]
+  bookings           Booking[]
   createdAt          DateTime               @default(now())
   updatedAt          DateTime               @updatedAt
 
@@ -361,7 +370,37 @@ model Bid {
 
   post     TripPost        @relation(fields: [postId], references: [id], onDelete: Cascade)
   provider ProviderProfile @relation(fields: [providerId], references: [id], onDelete: Cascade)
+  booking  Booking?
 
   @@unique([postId, providerId])
+  @@index([providerId, status])
+}
+
+/// An accepted bid. Payment is arranged directly for now; the commission is
+/// recorded so the amounts are already right when online payment arrives.
+model Booking {
+  id            String        @id @default(cuid())
+  tripId        String
+  postId        String
+  bidId         String        @unique
+  travellerId   String
+  providerId    String
+  priceUsd      Int
+  commissionPct Int
+  commissionUsd Int
+  status        BookingStatus @default(CONFIRMED)
+  cancelledById String?
+  cancelReason  String?
+  cancelledAt   DateTime?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  trip      Trip            @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  bid       Bid             @relation(fields: [bidId], references: [id], onDelete: Restrict)
+  traveller User            @relation(fields: [travellerId], references: [id], onDelete: Restrict)
+  provider  ProviderProfile @relation(fields: [providerId], references: [id], onDelete: Restrict)
+
+  @@index([tripId])
+  @@index([travellerId])
   @@index([providerId, status])
 }

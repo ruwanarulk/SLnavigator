@@ -1,7 +1,7 @@
 import type { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import type { PrismaService } from '../src/prisma/prisma.service';
-import { adminCookie, createApp, PNG, signup, signupProvider, submitProvider } from './helpers';
+import { adminCookie, cleanupUsers, createApp, PNG, signup, signupProvider, submitProvider } from './helpers';
 
 describe('Provider verification (e2e)', () => {
   let app: INestApplication;
@@ -20,8 +20,7 @@ describe('Provider verification (e2e)', () => {
   });
 
   afterAll(async () => {
-    await prisma.auditLog.deleteMany({ where: { actor: { email: emails.admin } } });
-    await prisma.user.deleteMany({ where: { email: { in: Object.values(emails) } } });
+    await cleanupUsers(prisma, Object.values(emails));
     await app.close();
   });
 

@@ -18,6 +18,8 @@ import { ItinerariesController } from './itineraries/itineraries.controller';
 import { LocationsController } from './locations/locations.controller';
 import { MeController } from './me/me.controller';
 import { PlacesController } from './places/places.controller';
+import { BookingsController, TripChoiceController } from './bookings/bookings.controller';
+import { BookingsService } from './bookings/bookings.service';
 import { ProviderRequestsController, TripPostController } from './posts/posts.controller';
 import { PostsService } from './posts/posts.service';
 import { PlannerController } from './planner/planner.controller';
@@ -67,11 +69,14 @@ class HealthController {
     ProviderController,
     TripPostController,
     ProviderRequestsController,
+    TripChoiceController,
+    BookingsController,
   ],
   providers: [
     AuthService,
     ProviderService,
     PostsService,
+    BookingsService,
     TripsService,
     LegsService,
     RequireAuthGuard,

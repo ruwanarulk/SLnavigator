@@ -1,7 +1,7 @@
 import type { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import type { PrismaService } from '../src/prisma/prisma.service';
-import { approveProvider, createApp, isoDate, signup, signupProvider } from './helpers';
+import { approveProvider, cleanupUsers, createApp, isoDate, signup, signupProvider } from './helpers';
 
 describe('Posting and bidding (e2e)', () => {
   let app: INestApplication;
@@ -58,7 +58,7 @@ describe('Posting and bidding (e2e)', () => {
   });
 
   afterAll(async () => {
-    await prisma.user.deleteMany({ where: { email: { in: emails } } });
+    await cleanupUsers(prisma, emails);
     await prisma.location.deleteMany({ where: { id: { in: locIds } } });
     await app.close();
   });

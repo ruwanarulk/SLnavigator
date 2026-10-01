@@ -1,13 +1,14 @@
 "use client";
 
 import clsx from "clsx";
-import { Bell, FileText, Inbox, Send, UserRound } from "lucide-react";
+import { Bell, CalendarCheck, FileText, Inbox, Send, UserRound } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const ITEMS = [
   { href: "/provider/requests", label: "Trip requests", icon: Inbox, needsApproval: true },
   { href: "/provider/bids", label: "My bids", icon: Send, needsApproval: true },
+  { href: "/provider/bookings", label: "Bookings", icon: CalendarCheck, needsApproval: true },
   { href: "/inbox", label: "Messages", icon: FileText, needsApproval: true },
   { href: "/notifications", label: "Notifications", icon: Bell, needsApproval: false },
   { href: "/provider/profile", label: "Profile & verification", icon: UserRound, needsApproval: false },
