@@ -2,7 +2,7 @@
 
 import { CATEGORIES, formatDuration, seasonFor, type Region } from "@sln/core";
 import clsx from "clsx";
-import { Check, CloudRain, CloudOff, Loader2, Plus, Sparkles, UsersRound } from "lucide-react";
+import { Check, CloudRain, CloudOff, Loader2, Minus, Plus, Sparkles, UsersRound } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
@@ -15,7 +15,6 @@ import { TripMap } from "../map/trip-map";
 import { Dialog } from "../ui/dialog";
 import { Button, ButtonLink, Chip, Rating } from "../ui/primitives";
 import { SceneArt } from "../ui/scene-art";
-import { BudgetPanel } from "./budget-panel";
 import { PlaceSearch } from "./place-search";
 import { TheLine } from "./the-line";
 import { TransportOptions } from "./transport-options";
@@ -26,13 +25,12 @@ const FILTERS = CATEGORIES.filter((c) => ["temple", "beach", "wildlife", "herita
 export function Planner({ trip, places }: { trip: Trip | null; places: LocationCard[] }) {
   const router = useRouter();
   const { user } = useSession();
-  const { state, actions, budget, days, travelMin, saveState } = usePlanner(trip);
+  const { state, actions, days, travelMin, saveState } = usePlanner(trip);
   const [selected, setSelected] = useState<LocationCard | null>(null);
   const [filter, setFilter] = useState<string | null>(null);
   const [monsoon, setMonsoon] = useState(false);
   const [fetched, setFetched] = useState<{ key: string; list: Suggestion[] }>({ key: "", list: [] });
   const [dialog, setDialog] = useState<"bids" | "self" | null>(null);
-  const [mobileTab, setMobileTab] = useState<"route" | "budget">("route");
   const [saving, setSaving] = useState(false);
   const openFork = (path: "self" | "bids") => {
     setDialog(path);
@@ -115,8 +113,27 @@ export function Planner({ trip, places }: { trip: Trip | null; places: LocationC
             className="rounded bg-transparent text-[13px] text-label2 outline-none hover:bg-fill/60"
           />
         </label>
-        <span className="inline-flex items-center gap-1">
-          <UsersRound aria-hidden className="size-3.5" /> {state.travelers} {state.travelers === 1 ? "traveller" : "travellers"}
+        <span role="group" aria-label="Travellers" className="inline-flex items-center gap-1">
+          <UsersRound aria-hidden className="size-3.5" />
+          <button
+            aria-label="Fewer travellers"
+            disabled={state.travelers <= 1}
+            onClick={() => actions.setMeta({ travelers: state.travelers - 1 })}
+            className="grid size-6 place-items-center rounded-full hover:bg-fill disabled:opacity-40"
+          >
+            <Minus className="size-3" />
+          </button>
+          <span aria-live="polite" className="tabular-nums">
+            {state.travelers} {state.travelers === 1 ? "traveller" : "travellers"}
+          </span>
+          <button
+            aria-label="More travellers"
+            disabled={state.travelers >= 20}
+            onClick={() => actions.setMeta({ travelers: state.travelers + 1 })}
+            className="grid size-6 place-items-center rounded-full hover:bg-fill disabled:opacity-40"
+          >
+            <Plus className="size-3" />
+          </button>
         </span>
         {days > 0 && (
           <span>
@@ -179,25 +196,13 @@ export function Planner({ trip, places }: { trip: Trip | null; places: LocationC
     </div>
   );
 
-  const budgetPanel = (
-    <BudgetPanel
-      budget={budget}
-      settings={state.budgetSettings}
-      travelers={state.travelers}
-      days={days}
-      onSettings={(b) => actions.setMeta({ budgetSettings: b })}
-      onTravelers={(n) => actions.setMeta({ travelers: n })}
-    />
-  );
-
   return (
-    <div className="md:grid md:h-[calc(100dvh-64px)] md:grid-cols-[360px_1fr] md:grid-rows-1 xl:grid-cols-[380px_1fr_320px]">
+    <div className="md:grid md:h-[calc(100dvh-64px)] md:grid-cols-[360px_1fr] md:grid-rows-1 xl:grid-cols-[400px_1fr]">
       {/* Left rail */}
       <aside className="hidden overflow-y-auto border-r border-sep bg-card p-5 md:block" aria-label="Route">
         {header}
         {!trip && <LocalBanner onSave={saveToAccount} saving={saving} signedIn={!!user} />}
         <div className="mt-5">{route}</div>
-        <div className="mt-8 xl:hidden">{budgetPanel}</div>
       </aside>
 
       {/* Map */}
@@ -249,11 +254,6 @@ export function Planner({ trip, places }: { trip: Trip | null; places: LocationC
         )}
       </section>
 
-      {/* Right budget column (xl) */}
-      <aside className="hidden overflow-y-auto border-l border-sep bg-card p-5 xl:block" aria-label="Budget">
-        {budgetPanel}
-      </aside>
-
       {/* Mobile sheet */}
       <div className="relative -mt-6 rounded-t-[28px] bg-card px-4 pb-28 pt-3 shadow-float md:hidden">
         <div aria-hidden className="mx-auto mb-3 h-1.5 w-10 rounded-full bg-sep" />
@@ -267,20 +267,7 @@ export function Planner({ trip, places }: { trip: Trip | null; places: LocationC
             Get Guide Bids
           </Button>
         </div>
-        <div role="tablist" className="mb-4 grid grid-cols-2 rounded-full bg-fill p-1">
-          {(["route", "budget"] as const).map((t) => (
-            <button
-              key={t}
-              role="tab"
-              aria-selected={mobileTab === t}
-              onClick={() => setMobileTab(t)}
-              className={clsx("h-9 rounded-full text-[14px] font-medium capitalize", mobileTab === t ? "bg-card shadow-sm" : "text-label2")}
-            >
-              {t}
-            </button>
-          ))}
-        </div>
-        {mobileTab === "route" ? route : budgetPanel}
+        {route}
       </div>
 
       <Dialog open={dialog === "self"} onClose={() => setDialog(null)} title="Book it myself" wide>

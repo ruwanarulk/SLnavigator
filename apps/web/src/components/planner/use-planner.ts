@@ -2,7 +2,6 @@
 
 import {
   DEFAULT_BUDGET,
-  estimateBudget,
   estimateLeg,
   legTerrain,
   tripDays,
@@ -29,7 +28,7 @@ type Meta = Partial<Omit<PlannerState, "stops" | "budgetSettings">> & { budgetSe
 /** Identifies what a leg was computed for, so edits only invalidate the legs they touch. */
 const legKey = (s: TripStop, next: TripStop) => `${next.location.id}:${s.modeToNext}`;
 
-/** Keeps still-valid legs and estimates the rest, so the rail and budget update instantly. */
+/** Keeps still-valid legs and estimates the rest, so the route rail updates instantly. */
 function refreshLegs(stops: TripStop[]): TripStop[] {
   return stops.map((s, i) => {
     const next = stops[i + 1];
@@ -189,22 +188,10 @@ export function usePlanner(trip: Trip | null) {
     [setStops, setMeta],
   );
 
-  const budget = useMemo(
-    () =>
-      estimateBudget({
-        travelers: state.travelers,
-        nights: state.stops.reduce((a, s) => a + s.nights, 0),
-        entryFeesPerPerson: state.stops.map((s) => s.location.entryFeeUsd),
-        legs: state.stops.slice(0, -1).map((s) => ({ mode: s.modeToNext, distanceKm: s.leg?.distanceKm ?? 0 })),
-        settings: state.budgetSettings,
-      }),
-    [state],
-  );
-
   const days = state.stops.length ? tripDays(state.stops.map((s) => s.nights)) : 0;
   const travelMin = state.stops.reduce((sum, s) => sum + (s.leg?.durationMin ?? 0), 0);
 
-  return { state, actions, budget, days, travelMin, saveState };
+  return { state, actions, days, travelMin, saveState };
 }
 
 export type PlannerActions = ReturnType<typeof usePlanner>["actions"];
