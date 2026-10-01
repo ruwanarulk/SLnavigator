@@ -16,6 +16,8 @@ import { markGoogleFailed } from "./google-status";
 import type { TripMapProps } from "./types";
 
 const SRI_LANKA = { lat: 7.85, lng: 80.7 };
+/** Centre each marker's dot on its coordinates (Google defaults to bottom-centre). */
+const DOT_ANCHOR = "-50%";
 
 /** How long Google's script may take to load before we assume it's blocked. */
 const SCRIPT_TIMEOUT_MS = 20_000;
@@ -108,7 +110,14 @@ export function GoogleTripMap({
             places
               .filter((p) => !routeIds.has(p.id))
               .map((p) => (
-                <AdvancedMarker key={p.id} position={p} title={p.name} onClick={() => onSelect?.(p)}>
+                <AdvancedMarker
+                  key={p.id}
+                  position={p}
+                  title={p.name}
+                  onClick={() => onSelect?.(p)}
+                  anchorLeft={DOT_ANCHOR}
+                  anchorTop={DOT_ANCHOR}
+                >
                   <span
                     className={clsx(
                       "block rounded-full border-2 border-card",
@@ -119,9 +128,11 @@ export function GoogleTripMap({
                 </AdvancedMarker>
               ))}
           {suggestion && (
-            <AdvancedMarker position={suggestion} title={`Suggested: ${suggestion.name}`}>
-              <span className="rounded-full border-2 border-dashed border-signal bg-signal-t px-2 py-0.5 font-display text-[12px] font-bold text-signal-ink">
-                + {suggestion.name.toUpperCase()}
+            <AdvancedMarker position={suggestion} title={`Suggested: ${suggestion.name}`} anchorLeft={DOT_ANCHOR} anchorTop={DOT_ANCHOR}>
+              <span className="relative block size-4 rounded-full border-2 border-dashed border-signal bg-signal-t">
+                <span className="absolute left-1/2 top-full mt-1 -translate-x-1/2 whitespace-nowrap rounded-full bg-signal-t px-2 py-0.5 font-display text-[11px] font-bold text-signal-ink">
+                  + {suggestion.name.toUpperCase()}
+                </span>
               </span>
             </AdvancedMarker>
           )}
@@ -132,16 +143,18 @@ export function GoogleTripMap({
               title={`Stop ${i + 1}: ${r.location.name}`}
               onClick={() => onSelect?.(r.location)}
               zIndex={100 + i}
+              anchorLeft={DOT_ANCHOR}
+              anchorTop={DOT_ANCHOR}
             >
-              <span className="flex items-center gap-1.5">
-                <span
-                  className={clsx(
-                    "block size-4 border-[3px] border-accent",
-                    i === 0 || i === route.length - 1 ? "rounded-[3px]" : "rounded-full",
-                    r.location.id === selectedId ? "bg-signal" : "bg-card",
-                  )}
-                />
-                <span className="rounded bg-card/90 px-1 font-display text-[12px] font-bold tracking-wide text-label">
+              {/* Only the station is measured for the anchor; the label hangs off to the right. */}
+              <span
+                className={clsx(
+                  "relative block size-4 border-[3px] border-accent",
+                  i === 0 || i === route.length - 1 ? "rounded-[3px]" : "rounded-full",
+                  r.location.id === selectedId ? "bg-signal" : "bg-card",
+                )}
+              >
+                <span className="absolute left-full top-1/2 ml-1.5 -translate-y-1/2 whitespace-nowrap rounded bg-card/90 px-1 font-display text-[12px] font-bold tracking-wide text-label">
                   {r.location.name.toUpperCase()}
                 </span>
               </span>
