@@ -97,6 +97,7 @@ export function GoogleTripMap({
   routeOnly,
   suggestion,
   compact,
+  gestures = "cooperative",
   className,
 }: TripMapProps & { apiKey: string }) {
   const routeIds = new Set(route.map((r) => r.location.id));
@@ -110,7 +111,7 @@ export function GoogleTripMap({
           defaultZoom={7.2}
           mapId={process.env.NEXT_PUBLIC_GOOGLE_MAP_ID ?? "DEMO_MAP_ID"}
           colorScheme={ColorScheme.FOLLOW_SYSTEM}
-          gestureHandling={compact ? "none" : "greedy"}
+          gestureHandling={compact ? "none" : gestures}
           disableDefaultUI
           zoomControl={!compact}
           keyboardShortcuts={!compact}

@@ -16,5 +16,10 @@ export interface TripMapProps {
   suggestion?: LocationCard | null;
   /** Static thumbnail: fit to the route, no controls. */
   compact?: boolean;
+  /**
+   * "greedy": the scroll wheel zooms the map (full-screen planner).
+   * "cooperative" (default): the wheel scrolls the page; Ctrl/⌘ + scroll or two fingers zoom.
+   */
+  gestures?: "greedy" | "cooperative";
   className?: string;
 }

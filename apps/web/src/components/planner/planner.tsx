@@ -209,6 +209,7 @@ export function Planner({ trip, places }: { trip: Trip | null; places: LocationC
       <section className="relative h-[52dvh] md:h-auto" aria-label="Map">
         <TripMap
           className="size-full"
+          gestures="greedy"
           places={markerPlaces}
           route={state.stops}
           selectedId={selected?.id}

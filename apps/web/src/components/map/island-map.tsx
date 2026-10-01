@@ -29,7 +29,7 @@ const H = 4.75 * K;
 
 const project = (lat: number, lng: number) => ({ x: (lng - LNG_LEFT) * K, y: (LAT_TOP - lat) * K });
 
-export function IslandMap({ places, route, selectedId, onSelect, fadedRegions, routeOnly, suggestion, compact, className }: TripMapProps) {
+export function IslandMap({ places, route, selectedId, onSelect, fadedRegions, routeOnly, suggestion, compact, gestures = "cooperative", className }: TripMapProps) {
   const [zoom, setZoom] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const drag = useRef<{ x: number; y: number; px: number; py: number } | null>(null);
@@ -78,7 +78,11 @@ export function IslandMap({ places, route, selectedId, onSelect, fadedRegions, r
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={() => (drag.current = null)}
-        onWheel={(e) => setZoom((z) => Math.min(4, Math.max(1, z * (e.deltaY < 0 ? 1.15 : 0.87))))}
+        onWheel={(e) => {
+          // In scrolling pages the wheel scrolls the page unless Ctrl/⌘ is held, matching Google's cooperative mode.
+          if (compact || (gestures === "cooperative" && !e.ctrlKey && !e.metaKey)) return;
+          setZoom((z) => Math.min(4, Math.max(1, z * (e.deltaY < 0 ? 1.15 : 0.87))));
+        }}
       >
         <polygon points={coast} fill="var(--land)" stroke="var(--land-line)" strokeWidth={1.5 / zoom} strokeLinejoin="round" />
 
